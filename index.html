@@ -19,6 +19,7 @@
       margin: var(--ddd-spacing-2);
       border: var(--ddd-border-md);
       border-radius: var(--ddd-radius-lg);
+      padding: var(--ddd-spacing-4);
     }
     haxcms-settings-panel:hover {
       box-shadow: var(--ddd-boxShadow-sm);
@@ -34,14 +35,11 @@
 
 <body>
   <div id="demo">
-    <h1>haxcms-settings-panel</h1>
-    <!-- this is going to do whatever the tag's defaults are -->
-    <h2>Default</h2>
-    <haxcms-settings-panel></haxcms-settings-panel>
-    <h2>Slot usage</h2>
-    <haxcms-settings-panel data-accent="2" data-primary="17"><div>Sample slot content</div></haxcms-settings-panel>
-    <h2>Property usage</h2>
-    <haxcms-settings-panel id="example" title="Sample property title"></haxcms-settings-panel>
+    <haxcms-settings-panel title="THIS IS A SAMPLE TITLE" 
+    breadcrumbs='["Settings", "JS/CSS"]'
+    description="THIS IS A SAMPLE DESCRIPTION">
+  
+    </haxcms-settings-panel>
   </div>
   <script type="module" src="./haxcms-settings-panel.js"></script>
 </body>
