@@ -21,6 +21,8 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   constructor() {
     super();
     this.title = "";
+    this.breadcrumbs = [];
+    this.description = "";
     this.t = this.t || {};
     this.t = {
       ...this.t,
@@ -39,6 +41,8 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     return {
       ...super.properties,
       title: { type: String },
+      breadcrumbs: { type: Array },
+      description: { type: String },
     };
   }
 
@@ -59,15 +63,46 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       h3 span {
         font-size: var(--haxcms-settings-panel-label-font-size, var(--ddd-font-size-s));
       }
+
+      .panel-titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--ddd-spacing-2);
+      }
+
+      .close-button {
+        padding: var(--ddd-spacing-2);
+        border: none;
+        background: none;
+        font-size: var(--ddd-font-size-xxs);
+        cursor: pointer;
+      }
     `];
   }
 
   // Lit render the HTML
   render() {
     return html`
-<div class="wrapper">
-  <h3><span>${this.t.title}:</span> ${this.title}</h3>
-  <slot></slot>
+<div class="panel">
+  <div class=panel-titlebar>
+    <nav class="breadcrumbs">
+      ${this.breadcrumbs.map((item, index) => html`
+        <span>${item}</span>
+          ${index < this.breadcrumbs.length - 1 ? html`<span> > </span>` : ""}
+      `)}
+    </nav>
+    <button class="close-button">x</button>
+  </div>
+
+  <div class = "panel-shell">
+    <div class = "panel-header">
+      <h2>${this.title}</h2>
+      <div class="description">
+        ${this.description}
+      </div>
+    </div>
+  </div>
 </div>`;
   }
 
