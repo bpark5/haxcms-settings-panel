@@ -1,0 +1,51 @@
+{
+    "api": "1",
+    "canScale": true,
+    "canEditSource": true,
+    "type": "element",
+    "designSystem": {
+        "accent": true,
+        "primary": true,
+        "card": true,
+        "text": true,
+        "designTreatment": false
+    },
+    "gizmo": {
+        "title": "haxcms-settings-panel",
+        "description": "",
+        "icon": "icons:android",
+        "color": "purple",
+        "tags": [
+            "Other"
+        ],
+        "handles": [],
+        "meta": {
+            "author": "cjh6976-prog"
+        }
+    },
+    "settings": {
+        "configure": [
+            {
+                "property": "title",
+                "title": "Title",
+                "description": "",
+                "inputMethod": "textfield",
+                "icon": "editor:title",
+                "required": true
+            }
+        ]
+    },
+    "saveOptions": {
+        "wipeSlot": false,
+        "unsetAttributes": []
+    },
+    "demoSchema": [
+        {
+            "tag": "haxcms-settings-panel",
+            "properties": {
+              "title": "Sample property title"
+            },
+            "content": ""
+        }
+    ]
+}
