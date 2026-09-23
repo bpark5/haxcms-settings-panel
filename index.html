@@ -15,12 +15,7 @@
     #demo {
       margin: var(--ddd-spacing-2);
     }
-    haxcms-settings-panel {
-      margin: var(--ddd-spacing-2);
-      border: var(--ddd-border-md);
-      border-radius: var(--ddd-radius-lg);
-      padding: var(--ddd-spacing-4);
-    }
+
     haxcms-settings-panel:hover {
       box-shadow: var(--ddd-boxShadow-sm);
     }
@@ -37,10 +32,15 @@
   <div id="demo">
     <haxcms-settings-panel title="THIS IS A SAMPLE TITLE" 
     breadcrumbs='["Settings", "JS/CSS"]'
-    description="THIS IS A SAMPLE DESCRIPTION">
-  
+    description="THIS IS A SAMPLE DESCRIPTION"
+    actionButton="Save"
+    panelVisible="true">
+      <code-editor></code-editor>
     </haxcms-settings-panel>
   </div>
-  <script type="module" src="./haxcms-settings-panel.js"></script>
+  <script type="module">
+    import "./haxcms-settings-panel.js";
+    import "@haxtheweb/code-editor/code-editor.js";
+  </script>
 </body>
 </html>
