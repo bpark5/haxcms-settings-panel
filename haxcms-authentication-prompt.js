@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
+import "@haxtheweb/simple-icon/lib/simple-icon-button-lite.js";
 
 export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
@@ -12,7 +13,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
     this.password = "";
     this.showPassword = false;
-    this.opened = true;
+    this.opened = false;
     this.errorMessage = "";
     this.authenticating = false;
   }
@@ -49,54 +50,58 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
         .authentication-prompt {
           width: min(500px, calc(100vw - 32px));
-          background: white;
-          border: 2px solid #444;
-          border-radius: var(--ddd-radius-sm);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-          color: black;
+          background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
+          border: 2px solid light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+          border-radius: var(--ddd-radius-md);
+          overflow: hidden;
+          box-shadow: var(--ddd-boxShadow-md);
+          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
         }
 
         .titlebar {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: var(--ddd-spacing-4);
-          border-bottom: 1px solid #ccc;
+          padding: var(--ddd-spacing-3);
+          background: var(--ddd-theme-default-black);
+          color: var(--ddd-theme-default-white);
         }
 
         .titlebar h3 {
           margin: 0;
           font-size: var(--ddd-font-size-m);
+          font-family: var(--ddd-font-navigation);
+          font-weight: var(--ddd-font-weight-bold);
         }
 
         .close-button {
-          border: none;
-          background: none;
-          cursor: pointer;
-          font-size: 24px;
-          line-height: 1;
+          width: var(--ddd-spacing-10);
+          height: var(--ddd-spacing-10);
+          --simple-icon-color: var(--ddd-theme-default-white);
+          --simple-icon-button-focus-color:var(--ddd-theme-default-skyBlue);
+          --simple-icon-width: var(--ddd-font-size-m);
+          --simple-icon-height: var(--ddd-font-size-m);
         }
 
         .prompt-content {
           padding: var(--ddd-spacing-4);
+          background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
         }
 
         .prompt-content p {
-          margin-top: 0;
+          margin: 0;
+          padding-top: var(--ddd-spacing-1);
+          font-family: var(--ddd-font-primary);
+          font-size: var(--ddd-font-size-3xs);
+          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
         }
 
         .password-input {
           display: flex;
           align-items: center;
-          border: 1px solid #777;
-          border-radius: var(--ddd-radius-xs);
+          border-radius: var(--ddd-radius-sm);
           margin-top: var(--ddd-spacing-4);
-          background: white;
-        }
-
-        .password-input:focus-within {
-          outline: 2px solid currentColor;
-          outline-offset: 2px;
+          background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
         }
 
         .password-input input {
@@ -107,11 +112,16 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           outline: none;
           background: transparent;
           font-size: 16px;
+          font-family: var(--ddd-font-primary);
+          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+        }
+
+        .password-input input::placeholder {
+          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+          opacity: 0.7;
         }
 
         .show-password {
-          border: none;
-          background: none;
           cursor: pointer;
           padding: var(--ddd-spacing-3);
         }
@@ -119,6 +129,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         .error-message {
           margin-top: var(--ddd-spacing-2);
           font-size: var(--ddd-font-size-xs);
+          font-family: var(--ddd-font-primary);
         }
 
         .actions {
@@ -128,7 +139,19 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         }
 
         .continue-button {
+          font-family: var(--ddd-font-navigation);
+          font-size: var(--ddd-font-size-xs);
+          background-color: var(--ddd-theme-default-coalyGray);
+          border: none;
+          border-radius: var(--ddd-radius-xs);
           padding: var(--ddd-spacing-2) var(--ddd-spacing-4);
+          color: var(--ddd-theme-default-white);
+        }
+
+        .continue-button:hover {
+          box-shadow: var(--ddd-boxShadow-sm);
+          transform: translateY(-1px);
+          transition: 0.3s all ease-in-out;
           cursor: pointer;
         }
 
@@ -163,14 +186,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               Authentication Needed
             </h3>
 
-            <button
+            <simple-icon-button-lite
               class="close-button"
-              type="button"
+              icon="close"
+              label="Close"
               @click=${this.closePrompt}
-              aria-label="Close authentication prompt"
             >
-              ×
-            </button>
+            </simple-icon-button-lite>
           </div>
 
           <div class="prompt-content">
@@ -187,23 +209,19 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
                 .value=${this.password}
                 @input=${this.passwordChanged}
                 @keydown=${this.handleKeydown}
-                placeholder="Password"
+                placeholder="Enter Your Password"
                 autocomplete="current-password"
                 ?disabled=${this.authenticating}
               />
 
-              <button
+              <simple-icon-button-lite
+                icon=${this.showPassword ? "visibility-off" : "visibility"}
+                label=${this.showPassword ? "Hide password" : "Show password"}
                 class="show-password"
-                type="button"
                 @click=${this.togglePassword}
-                aria-label=${this.showPassword
-                  ? "Hide password"
-                  : "Show password"}
                 ?disabled=${this.authenticating}
               >
-                ${this.showPassword ? "Hide" : "Show"}
-              </button>
-
+              </simple-icon-button-lite>
             </div>
 
             ${this.errorMessage
