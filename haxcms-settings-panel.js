@@ -220,6 +220,65 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         transition: 0.3s all ease-in-out;
         cursor: pointer;
       }
+
+      @media (max-width: 600px) {
+        :host {
+          margin: var(--ddd-spacing-2);
+        }
+
+        .panel-titlebar {
+          padding: var(--ddd-spacing-2);
+        }
+
+        .breadcrumbs {
+          font-size: var(--ddd-font-size-s);
+          gap: var(--ddd-spacing-1);
+        }
+
+        .breadcrumb-icon {
+          --simple-icon-width: var(--ddd-font-size-s);
+          --simple-icon-height: var(--ddd-font-size-s);
+        }
+
+        .close-button {
+          width: var(--ddd-spacing-8);
+          height: var(--ddd-spacing-8);
+
+          --simple-icon-width: var(--ddd-font-size-m);
+          --simple-icon-height: var(--ddd-font-size-m);
+        }
+
+        .panel-header {
+          padding: var(--ddd-spacing-3);
+        }
+
+        .panel-title {
+          font-size: var(--ddd-font-size-s);
+        }
+
+        .panel-title-icon {
+          --simple-icon-width: var(--ddd-font-size-s);
+          --simple-icon-height: var(--ddd-font-size-s);
+        }
+
+        .panel-description {
+          font-size: var(--ddd-font-size-4xs);
+        }
+
+        .panel-content {
+          padding-left: var(--ddd-spacing-2);
+          padding-right: var(--ddd-spacing-2);
+        }
+
+        .panel-actions {
+          padding: var(--ddd-spacing-3);
+        }
+
+        .action-button {
+          font-size: var(--ddd-font-size-2xs);
+          padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
+        }
+      }
     `];
   }
 
