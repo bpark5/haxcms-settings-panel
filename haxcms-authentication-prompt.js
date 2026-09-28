@@ -115,6 +115,11 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           font-family: var(--ddd-font-primary);
           color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
         }
+        .password-input input::-ms-reveal,
+        .password-input input::-ms-clear {
+          display: none;
+        }
+        
 
         .password-input input::placeholder {
           color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
