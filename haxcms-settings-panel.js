@@ -75,10 +75,23 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         gap: var(--ddd-spacing-2);
       }
 
-      .breadcrumb-item {
+      .breadcrumb-button, .breadcrumb-current {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        font: inherit;
+        color: inherit;
+      }
+
+      .breadcrumb-button {
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .breadcrumb-button:hover .breadcrumb-text {
+        text-decoration: underline;
       }
 
       .breadcrumb-icon {
@@ -210,16 +223,29 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     return html`
     <div class="panel">
       <div class= "panel-titlebar">
-        <nav class="breadcrumbs">
-          ${this.breadcrumbs.map((item, index) => html`
-            <span class ="breadcrumb-item">
-              <simple-icon-lite class = "breadcrumb-icon" icon="${item.icon}"></simple-icon-lite>
-              <span class = "breadcrumb-text">${item.label}</span>
-            </span>
-            ${index < this.breadcrumbs.length - 1 
-              ? html`<span class = "breadcrumb-separator"> > </span>` 
+        <nav class="breadcrumbs" aria-label = "Breadcrumb">
+          ${this.breadcrumbs.map((item, index) => {
+            const isCurrent = index === this.breadcrumbs.length - 1;
+
+            return html`
+              ${isCurrent ? html`
+                <span class = "breadcrumb-current" aria-current="page">
+                  <simple-icon-lite class = "breadcrumb-icon" icon="${item.icon}"></simple-icon-lite>
+                  <span class = "breadcrumb-text">${item.label}</span>
+                </span>
+              `
+              : html`
+              <button type = "button" class = "breadcrumb-button" @click = ${() => this._handleBreadcrumbClick(item)}>
+                <simple-icon-lite class = "breadcrumb-icon" icon="${item.icon}"></simple-icon-lite>
+                <span class = "breadcrumb-text">${item.label}</span>
+              </button>
+            `}
+
+            ${!isCurrent ? html `
+              <span class = "breadcrumb-separator"> > </span>`
               : ""}
-          `)}
+          `;
+          })} 
         </nav>
         <simple-icon-button-lite id = "close" class="close-button" icon = "close" label = "Close" @click=${this._closePanel}></simple-icon-button-lite>
       </div>
@@ -280,6 +306,17 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     );
   }
 
+  _handleBreadcrumbClick(item) {
+    this.dispatchEvent(
+      new CustomEvent("breadcrumb-click", {
+        detail: {
+          screen: item.screen,
+        },
+        bubbles: true,
+        composed: true,
+      })
+    )
+  }
 
   /**
    * haxProperties integration via file reference
