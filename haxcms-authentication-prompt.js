@@ -141,11 +141,12 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
         .actions {
           display: flex;
-          justify-content: flex-end;
+          align-items: center;
+          justify-content: space-between;
           margin-top: var(--ddd-spacing-4);
         }
 
-        .continue-button {
+        .continue-button, .back-button {
           font-family: var(--ddd-font-navigation);
           font-size: var(--ddd-font-size-xs);
           background-color: var(--ddd-theme-default-coalyGray);
@@ -155,7 +156,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           color: var(--ddd-theme-default-white);
         }
 
-        .continue-button:hover {
+        .continue-button:hover, .back-button:hover {
           box-shadow: var(--ddd-boxShadow-sm);
           transform: translateY(-1px);
           transition: 0.3s all ease-in-out;
@@ -165,6 +166,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         .continue-button:disabled {
           cursor: not-allowed;
           opacity: 0.5;
+          transform: none;
+          box-shadow: none;
         }
       `,
     ];
@@ -246,20 +249,32 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
                 `
               : ""}
 
-            <div class="actions">
+      <div class="actions">
 
-              <button
-                class="continue-button"
-                type="button"
-                @click=${this.continueAuthentication}
-                ?disabled=${!this.password || this.authenticating}
-              >
-                ${this.authenticating
-                  ? "Authenticating..."
-                  : "Continue"}
-              </button>
+  ${this.required
+    ? html`
+        <button
+          class="back-button"
+          type="button"
+          @click=${this.goBack}
+        >
+          Back
+        </button>
+      `
+    : html`<span></span>`}
 
-            </div>
+        <button
+        class="continue-button"
+        type="button"
+        @click=${this.continueAuthentication}
+        ?disabled=${!this.password || this.authenticating}
+          >
+        ${this.authenticating
+          ? "Authenticating..."
+          : "Continue"}
+        </button>
+
+        </div>
 
           </div>
         </div>
@@ -281,6 +296,23 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         ?.focus();
     });
   }
+        goBack() {
+        this.password = "";
+        this.showPassword = false;
+        this.errorMessage = "";
+        this.authenticating = false;
+        this.opened = false;
+
+        this.dispatchEvent(
+          new CustomEvent("breadcrumb-click", {
+            detail: {
+              screen: "settings",
+            },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      }
 
   closePrompt() {
     if (this.required) {
