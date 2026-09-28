@@ -135,8 +135,10 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
         .error-message {
           margin-top: var(--ddd-spacing-2);
-          font-size: var(--ddd-font-size-xs);
+          font-size: var(--ddd-font-size-3xs);
           font-family: var(--ddd-font-primary);
+          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+
         }
 
         .actions {
