@@ -30,17 +30,30 @@
 
 <body>
   <div id="demo">
-    <haxcms-settings-panel title="THIS IS A SAMPLE TITLE" 
-    breadcrumbs='["Settings", "JS/CSS"]'
-    description="THIS IS A SAMPLE DESCRIPTION"
+    <haxcms-settings-panel 
+    id = "settings-panel"
+    title="JS/CSS" 
+    breadcrumbs='[
+    {"icon": "settings", "label": "Settings"},
+    {"icon": "code", "label": "JS/CSS"}
+    ]'
+    description="Insert your own JavaScript or CSS file to make your HAX site more customizable."
     actionButton="Save"
     panelVisible="true">
-      <code-editor></code-editor>
+      <code-editor id = "editor" language="javascript"></code-editor>
     </haxcms-settings-panel>
   </div>
   <script type="module">
     import "./haxcms-settings-panel.js";
     import "@haxtheweb/code-editor/code-editor.js";
+
+    const panel = document.querySelector("#settings-panel");
+    const editor = document.querySelector("#editor");
+
+    panel.addEventListener("language-change", (e) => {
+      console.log("Language changed to: ", e.detail.language);
+      editor.setAttribute("language", e.detail.language);
+    });
   </script>
 </body>
 </html>
