@@ -16,6 +16,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.opened = false;
     this.errorMessage = "";
     this.authenticating = false;
+    this.required = false;
   }
 
   static get properties() {
@@ -26,6 +27,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
       opened: { type: Boolean, reflect: true },
       errorMessage: { type: String },
       authenticating: { type: Boolean },
+      required: { type: Boolean }
     };
   }
 
@@ -191,13 +193,17 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               Authentication Needed
             </h3>
 
-            <simple-icon-button-lite
-              class="close-button"
-              icon="close"
-              label="Close"
-              @click=${this.closePrompt}
-            >
-            </simple-icon-button-lite>
+              ${!this.required
+               ? html`
+              <simple-icon-button-lite
+                class="close-button"
+                icon="close"
+                label="Close"
+                @click=${this.closePrompt}
+              >
+              </simple-icon-button-lite>
+                 `
+                 : ""}
           </div>
 
           <div class="prompt-content">
@@ -261,11 +267,12 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     `;
   }
 
-  open() {
+  open(required = false) {
     this.password = "";
     this.showPassword = false;
     this.errorMessage = "";
     this.authenticating = false;
+    this.required = required;
     this.opened = true;
 
     this.updateComplete.then(() => {
@@ -276,6 +283,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   closePrompt() {
+    if (this.required) {
+      return;
+    }
     this.password = "";
     this.showPassword = false;
     this.errorMessage = "";
@@ -308,7 +318,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
       this.continueAuthentication();
     }
 
-    if (event.key === "Escape") {
+    if (event.key === "Escape" && !this.required) {
       this.closePrompt();
     }
   }
@@ -320,6 +330,16 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
     this.authenticating = true;
     this.errorMessage = "";
+    const demoPassword = "demo123";
+
+  if (this.password === demoPassword) {
+    this.authenticationSucceeded();
+  } else {
+    this.authenticationFailed(
+      "Incorrect password. Please try again."
+    );
+  }
+
 
     this.dispatchEvent(
       new CustomEvent("authentication-submit", {

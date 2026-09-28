@@ -271,11 +271,28 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
           <slot></slot>
         </div>
         <div class = "panel-actions">
-          <button class = "action-button" @click=${this._openAuthenticationPrompt}>${this.actionButton}</button>
+          <button class = "action-button" @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
         </div>
       </div>
       <haxcms-authentication-prompt></haxcms-authentication-prompt>
     </div>`;
+  }
+
+  firstUpdated() {
+    if (this.panelVisible) {
+      this._openAuthenticationPrompt(true);
+    }
+  }
+
+  updated(changedProperties) {
+    super.updated?.(changedProperties);
+
+    if (
+      changedProperties.has("panelVisible") &&
+      this.panelVisible
+    ) {
+      this._openAuthenticationPrompt(true);
+    }
   }
 
   _closePanel() {
@@ -288,10 +305,12 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     );
   }
 
-  _openAuthenticationPrompt() {
-    const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
+  _openAuthenticationPrompt(required = false) {
+  const prompt = this.shadowRoot.querySelector(
+    "haxcms-authentication-prompt"
+  );
 
-    prompt?.open();
+  prompt?.open(required);
   }
 
   _setLanguage(language) {
