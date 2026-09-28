@@ -90,7 +90,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         cursor: pointer;
       }
 
-      .breadcrumb-button:hover .breadcrumb-text {
+      .breadcrumb-button:hover .breadcrumb-text, .breadcrumb-button:focus-visible .breadcrumb-text {
         text-decoration: underline;
       }
 
@@ -196,6 +196,14 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         opacity: 1;
       }
 
+      .language-toggle button:hover, .language-toggle button:focus-visible {
+        opacity: 0.8;
+      }
+
+      .language-toggle button.active:hover, .language-toggle button.active:focus-visible {
+        opacity: 1;
+      }
+
       .action-button {
         font-family: var(--ddd-font-navigation);
         font-size: var(--ddd-font-size-xs);
@@ -206,7 +214,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         color: var(--ddd-theme-default-white);
       }
 
-      .action-button:hover {
+      .action-button:hover, .action-button:focus-visible{
         box-shadow: var(--ddd-boxShadow-sm);
         transform: translateY(-1px);
         transition: 0.3s all ease-in-out;

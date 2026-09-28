@@ -137,8 +137,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           margin-top: var(--ddd-spacing-2);
           font-size: var(--ddd-font-size-3xs);
           font-family: var(--ddd-font-primary);
-          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-
+          color: var(--ddd-theme-default-original87Pink);
+          font-weight: var(--ddd-font-weight-bold);
         }
 
         .actions {
