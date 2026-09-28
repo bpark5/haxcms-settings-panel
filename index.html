@@ -34,8 +34,8 @@
     id = "settings-panel"
     title="JS/CSS" 
     breadcrumbs='[
-    {"icon": "settings", "label": "Settings"},
-    {"icon": "code", "label": "JS/CSS"}
+    {"icon": "settings", "label": "Settings", "screen": "settings"},
+    {"icon": "code", "label": "JS/CSS", "screen": "code"}
     ]'
     description="Insert your own JavaScript or CSS file to make your HAX site more customizable."
     actionButton="Save"
@@ -54,6 +54,10 @@
       console.log("Language changed to: ", e.detail.language);
       editor.setAttribute("language", e.detail.language);
     });
+
+    panel.addEventListener("breadcrumb-click", (e) => {
+      console.log("Navigate to:", e.detail.screen);
+    })
   </script>
 </body>
 </html>
