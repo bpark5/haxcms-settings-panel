@@ -63,6 +63,9 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         padding: var(--ddd-spacing-3);
         background: var(--ddd-theme-default-black);
         margin-bottom: 0;
+        position: sticky;
+        top: 0;
+        z-index: 1;
       }
 
       .breadcrumbs {
@@ -72,13 +75,13 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         color: var(--ddd-theme-default-white);
         display: flex;
         align-items: center;
-        gap: var(--ddd-spacing-2);
       }
 
       .breadcrumb-button, .breadcrumb-current {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: var(--ddd-spacing-1);
         font: inherit;
         color: inherit;
       }
@@ -102,6 +105,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       .breadcrumb-separator {
         display: inline-flex;
         align-items: center;
+        margin: 0 var(--ddd-spacing-2);
       }
 
       .close-button {
@@ -207,7 +211,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       .action-button {
         font-family: var(--ddd-font-navigation);
         font-size: var(--ddd-font-size-xs);
-        background-color: var(--ddd-theme-default-coalyGray);
+        background-color: var(--ddd-theme-default-skyBlue);
         border: none;
         border-radius: var(--ddd-radius-xs);
         padding: var(--ddd-spacing-2) var(--ddd-spacing-4);
@@ -221,18 +225,18 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         cursor: pointer;
       }
 
+      /* For portrait mode phone */
       @media (max-width: 600px) {
         :host {
           margin: var(--ddd-spacing-2);
         }
 
         .panel-titlebar {
-          padding: var(--ddd-spacing-2);
+          padding: var(--ddd-spacing-1);
         }
 
         .breadcrumbs {
           font-size: var(--ddd-font-size-s);
-          gap: var(--ddd-spacing-1);
         }
 
         .breadcrumb-icon {
@@ -246,6 +250,11 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
 
           --simple-icon-width: var(--ddd-font-size-m);
           --simple-icon-height: var(--ddd-font-size-m);
+        }
+
+        .panel-shell {
+          max-height: calc(100vh - var(--ddd-spacing-8));
+          overflow-y: auto;
         }
 
         .panel-header {
@@ -277,6 +286,85 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         .action-button {
           font-size: var(--ddd-font-size-2xs);
           padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
+        }
+
+        .language-toggle button {
+          font-size: var(--ddd-font-size-5xs);
+          padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
+        }
+      }
+
+      /* For landscape mode phone */
+      @media (max-width: 900px) and (max-height: 500px) {
+        :host {
+          margin: var(--ddd-spacing-2);
+        }
+
+        .panel-titlebar {
+          padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
+        }
+
+        .breadcrumbs {
+          font-size: var(--ddd-font-size-s);
+        }
+
+        .breadcrumb-icon {
+          --simple-icon-width: var(--ddd-font-size-s);
+          --simple-icon-height: var(--ddd-font-size-s);
+        }
+
+        .close-button {
+          width: var(--ddd-spacing-8);
+          height: var(--ddd-spacing-8);
+
+          --simple-icon-width: var(--ddd-font-size-m);
+          --simple-icon-height: var(--ddd-font-size-m);
+        }
+
+        .panel-shell {
+          max-height: calc(100vh - var(--ddd-spacing-4));
+          overflow-y: auto;
+        }
+
+        .panel-header {
+          padding: var(--ddd-spacing-2);
+        }
+
+        .panel-title {
+          font-size: var(--ddd-font-size-s);
+        }
+
+        .panel-title-icon {
+          --simple-icon-width: var(--ddd-font-size-s);
+          --simple-icon-height: var(--ddd-font-size-s);
+        }
+
+        .panel-description {
+          font-size: var(--ddd-font-size-4xs);
+        }
+
+        .panel-content {
+          padding-left: var(--ddd-spacing-2);
+          padding-right: var(--ddd-spacing-2);
+          
+        }
+
+        .panel-actions {
+          padding: var(--ddd-spacing-2);
+        }
+
+        .editor-controls {
+          padding-right: var(--ddd-spacing-2);
+        }
+
+        .action-button {
+          font-size: var(--ddd-font-size-2xs);
+          padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
+        }
+
+        .language-toggle button {
+          font-size: var(--ddd-font-size-5xs);
+          padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
         }
       }
     `];
