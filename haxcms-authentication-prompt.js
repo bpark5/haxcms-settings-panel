@@ -364,26 +364,25 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
     this.authenticating = true;
     this.errorMessage = "";
-    const demoPassword = "demo123";
-
-  if (this.password === demoPassword) {
-    this.authenticationSucceeded();
-  } else {
-    this.authenticationFailed(
-      "Incorrect password. Please try again."
-    );
+    
+    this.authenticate(this.password);
   }
 
+  authenticate(password) {
+    fetch("./mock-authentication-responses.json")
+    .then((resp) => resp.json())
+    .then((data) => {
+      if (password === "demo123") {
+        this.authenticationSucceeded();
+      }
+      else {
+        this.authenticationFailed(data.failure.message);
+      }
+    })
 
-    this.dispatchEvent(
-      new CustomEvent("authentication-submit", {
-        detail: {
-          password: this.password,
-        },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    .catch(() => {
+      this.authenticationFailed("Authentication request failed.");
+    });
   }
 
   authenticationSucceeded() {
