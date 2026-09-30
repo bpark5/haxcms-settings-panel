@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-button-lite.js";
+import "@haxtheweb/simple-fields/lib/simple-fields-field.js";
 
 export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
@@ -46,18 +47,33 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           display: flex;
           align-items: center;
           justify-content: center;
+          padding: var(--ddd-spacing-4);
+          box-sizing: border-box;
+          overflow-y: auto;
           background: rgba(0, 0, 0, 0.45);
           z-index: 1000;
         }
 
-        .authentication-prompt {
-          width: min(500px, calc(100vw - 32px));
-          background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
-          border: 2px solid light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+          .authentication-prompt {
+          width: min(500px, 100%);
+          max-height: calc(100dvh - var(--ddd-spacing-8));
+          display: flex;
+          flex-direction: column;
+          background: light-dark(
+            var(--ddd-theme-default-white),
+            var(--ddd-theme-default-coalyGray)
+          );
+          border: 2px solid light-dark(
+            var(--ddd-theme-default-black),
+            var(--ddd-theme-default-white)
+          );
           border-radius: var(--ddd-radius-md);
           overflow: hidden;
           box-shadow: var(--ddd-boxShadow-md);
-          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+          color: light-dark(
+            var(--ddd-theme-default-black),
+            var(--ddd-theme-default-white)
+          );
         }
 
         .titlebar {
@@ -87,6 +103,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
         .prompt-content {
           padding: var(--ddd-spacing-4);
+          overflow-y: auto;
           background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
         }
 
@@ -94,82 +111,147 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           margin: 0;
           padding-top: var(--ddd-spacing-1);
           font-family: var(--ddd-font-primary);
-          font-size: var(--ddd-font-size-3xs);
+          font-size: var(--ddd-font-size-xs);
+          line-height: 1.5;
           color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
         }
 
         .password-input {
           display: flex;
-          align-items: center;
-          border-radius: var(--ddd-radius-sm);
-          margin-top: var(--ddd-spacing-4);
-          background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
+          align-items: flex-end;
+          width: 100%;
+          margin-top: var(--ddd-spacing-3);
+          gap: var(--ddd-spacing-2);
         }
 
-        .password-input input {
+        .password-input simple-fields-field {
           flex: 1;
           min-width: 0;
-          padding: var(--ddd-spacing-3);
-          border: none;
-          outline: none;
-          background: transparent;
-          font-size: 16px;
-          font-family: var(--ddd-font-primary);
-          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-        }
-        .password-input input::-ms-reveal,
-        .password-input input::-ms-clear {
-          display: none;
-        }
-        
 
-        .password-input input::placeholder {
-          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-          opacity: 0.7;
+          
+          --simple-fields-font-family: var(--ddd-font-primary);
+          --simple-fields-font-size: var(--ddd-font-size-xs);
+          --simple-fields-color: light-dark(
+            var(--ddd-theme-default-black),
+            var(--ddd-theme-default-white)
+          );
+          --simple-fields-background-color: light-dark(
+            var(--ddd-theme-default-limestoneMaxLight),
+            var(--ddd-theme-default-black)
+          );
+          --simple-fields-border-color: light-dark(
+            var(--ddd-theme-default-black),
+            var(--ddd-theme-default-white)
+          );
         }
 
         .show-password {
+          flex: 0 0 auto;
           cursor: pointer;
-          padding: var(--ddd-spacing-3);
-        }
+          margin-bottom: var(--ddd-spacing-2);
 
+          --simple-icon-color: light-dark(
+            var(--ddd-theme-default-black),
+            var(--ddd-theme-default-white)
+          );
+
+          --simple-icon-button-focus-color:
+            var(--ddd-theme-default-skyBlue);
+        }
         .error-message {
           margin-top: var(--ddd-spacing-2);
-          font-size: var(--ddd-font-size-3xs);
+          font-size: var(--ddd-font-size-xs);
+          line-height: 1.5;
           font-family: var(--ddd-font-primary);
           color: var(--ddd-theme-default-original87Pink);
           font-weight: var(--ddd-font-weight-bold);
         }
 
-        .actions {
+       .actions {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: var(--ddd-spacing-3);
           margin-top: var(--ddd-spacing-4);
         }
 
-        .continue-button, .back-button {
+        
+        .continue-button,
+        .back-button {
+          min-height: 44px;
           font-family: var(--ddd-font-navigation);
           font-size: var(--ddd-font-size-xs);
-          background-color: var(--ddd-theme-default-coalyGray);
-          border: none;
+          font-weight: var(--ddd-font-weight-bold);
           border-radius: var(--ddd-radius-xs);
           padding: var(--ddd-spacing-2) var(--ddd-spacing-4);
-          color: var(--ddd-theme-default-white);
-        }
-
-        .continue-button:hover, .back-button:hover {
-          box-shadow: var(--ddd-boxShadow-sm);
-          transform: translateY(-1px);
-          transition: 0.3s all ease-in-out;
           cursor: pointer;
         }
 
+        
+        .continue-button {
+          background-color: var(--ddd-theme-default-link);
+          color: var(--ddd-theme-default-white);
+          border: 2px solid var(--ddd-theme-default-link);
+        }
+
+       
+        .back-button {
+          background-color: transparent;
+          color: light-dark(
+            var(--ddd-theme-default-black),
+            var(--ddd-theme-default-white)
+          );
+          border: 2px solid currentColor;
+        }
+
+
+        .continue-button:hover,
+        .back-button:hover {
+          box-shadow: var(--ddd-boxShadow-sm);
+          transform: translateY(-1px);
+          transition: 0.3s all ease-in-out;
+        }
+
+        
+        .continue-button:focus-visible,
+        .back-button:focus-visible {
+          outline: 3px solid var(--ddd-theme-default-skyBlue);
+          outline-offset: 2px;
+        }
+
+        
         .continue-button:disabled {
           cursor: not-allowed;
           opacity: 0.5;
           transform: none;
           box-shadow: none;
+        }
+        @media (max-width: 480px) {
+          .overlay {
+            padding: var(--ddd-spacing-2);
+          }
+          .authentication-prompt {
+            width: 100%;
+            max-height: calc(100dvh - var(--ddd-spacing-4));
+          }
+          .prompt-content {
+            padding: var(--ddd-spacing-2);
+          }
+        }
+        @media (max-height: 500px) and (orientation: landscape) {
+          .overlay {
+            align-items: flex-start;
+            padding: var(--ddd-spacing-2);
+          }
+          .authentication-prompt {
+            max-height: calc(100dvh - var(--ddd-spacing-4));
+          }
+          .titlebar {
+            padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
+          }
+          .prompt-content {
+            padding: var(--ddd-spacing-2);
+          }
         }
       `,
     ];
@@ -191,6 +273,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           aria-modal="true"
           aria-labelledby="authentication-title"
           aria-describedby="authentication-description"
+          aria-busy=${this.authenticating ? "true" : "false"}
+          @keydown=${this.handleDialogKeydown}
         >
 
           <div class="titlebar">
@@ -219,16 +303,22 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
             <div class="password-input">
 
-              <input
+              <simple-fields-field
                 id="password"
                 type=${this.showPassword ? "text" : "password"}
-                .value=${this.password}
-                @input=${this.passwordChanged}
+                value=${this.password}
+                @value-changed=${this.passwordChanged}
                 @keydown=${this.handleKeydown}
+                label="Password"
                 placeholder="Enter Your Password"
                 autocomplete="current-password"
+                aria-describedby=${this.errorMessage 
+                  ? "authentication-description authentication-error" 
+                  : "authentication-description"} 
+                aria-invalid=${this.errorMessage ? "true" : "false"}
                 ?disabled=${this.authenticating}
-              />
+              >
+              </simple-fields-field>
 
               <simple-icon-button-lite
                 icon=${this.showPassword ? "visibility-off" : "visibility"}
@@ -238,11 +328,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
                 ?disabled=${this.authenticating}
               >
               </simple-icon-button-lite>
+
             </div>
 
             ${this.errorMessage
               ? html`
                   <div
+                  id="authentication-error"
                     class="error-message"
                     role="alert"
                   >
@@ -335,13 +427,59 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   passwordChanged(event) {
-    this.password = event.target.value;
+    this.password = event.detail?.value ?? event.target.value ?? "";
     this.errorMessage = "";
   }
 
   togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
+  const currentPassword = this.password;
+
+  this.showPassword = !this.showPassword;
+
+  this.updateComplete.then(() => {
+    const passwordField = this.shadowRoot?.querySelector("#password");
+
+    if (passwordField) {
+      passwordField.value = currentPassword;
+    }
+  });
+    }
+    handleDialogKeydown(event) { 
+        if (event.key !== "Tab") { 
+          return; 
+        } 
+
+        const dialog = this.shadowRoot?.querySelector( 
+          ".authentication-prompt", 
+        ); 
+
+        if (!dialog) { 
+          return; 
+        } 
+
+        const focusableElements = [ 
+          ...dialog.querySelectorAll( 
+            "simple-fields-field, simple-icon-button-lite, button:not([disabled])", 
+          ), 
+        ].filter((element) => !element.hasAttribute("disabled")); 
+
+        if (focusableElements.length === 0) { 
+          return; 
+        } 
+
+        const firstElement = focusableElements[0]; 
+        const lastElement = focusableElements[focusableElements.length - 1]; 
+        const activeElement = this.shadowRoot.activeElement; 
+
+        if (event.shiftKey && activeElement === firstElement) { 
+          event.preventDefault(); 
+          lastElement.focus(); 
+        } 
+        else if (!event.shiftKey && activeElement === lastElement) { 
+          event.preventDefault(); 
+          firstElement.focus(); 
+        } 
+      } 
 
   handleKeydown(event) {
     if (
