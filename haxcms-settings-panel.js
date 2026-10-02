@@ -97,6 +97,12 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         text-decoration: underline;
       }
 
+      .breadcrumb-button:focus-visible {
+        outline: 2px solid var(--ddd-theme-default-skyBlue);
+        outline-offset: 3px;
+        border-radius: var(--ddd-radius-xs);
+      }
+
       .breadcrumb-icon {
         --simple-icon-width: var(--ddd-font-size-m);
         --simple-icon-height: var(--ddd-font-size-m);
@@ -208,9 +214,24 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         opacity: 1;
       }
 
+      .language-toggle button:focus-visible {
+        outline: 2px solid light-dark(var(--ddd-theme-default-black),var(--ddd-theme-default-white));
+        outline-offset: -2px;
+      }
+
+      .language-toggle button:first-child:focus-visible {
+          border-radius: var(--ddd-radius-sm) 0 0 var(--ddd-radius-sm);
+        }
+
+        /* CSS button */
+        .language-toggle button:last-child:focus-visible {
+          border-radius: 0 var(--ddd-radius-sm) var(--ddd-radius-sm) 0;
+        }
+
       .action-button {
         font-family: var(--ddd-font-navigation);
         font-size: var(--ddd-font-size-xs);
+        font-weight: var(--ddd-font-weight-medium);
         background-color: var(--ddd-theme-default-skyBlue);
         border: none;
         border-radius: var(--ddd-radius-xs);
@@ -223,6 +244,11 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         transform: translateY(-1px);
         transition: 0.3s all ease-in-out;
         cursor: pointer;
+      }
+
+      .action-button:focus-visible {
+        outline: 2px solid light-dark(var(--ddd-theme-default-black),var(--ddd-theme-default-white));
+        border-radius: var(--ddd-radius-sm);
       }
 
       /* For portrait mode phone */
@@ -385,29 +411,29 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
             return html`
               ${isCurrent ? html`
                 <span class = "breadcrumb-current" aria-current="page">
-                  <simple-icon-lite class = "breadcrumb-icon" icon="${item.icon}"></simple-icon-lite>
+                  <simple-icon-lite class = "breadcrumb-icon" icon = "${item.icon}" aria-hidden = "true"></simple-icon-lite>
                   <span class = "breadcrumb-text">${item.label}</span>
                 </span>
               `
               : html`
               <button type = "button" class = "breadcrumb-button" @click = ${() => this._handleBreadcrumbClick(item)}>
-                <simple-icon-lite class = "breadcrumb-icon" icon="${item.icon}"></simple-icon-lite>
+                <simple-icon-lite class = "breadcrumb-icon" icon = "${item.icon}" aria-hidden = "true"></simple-icon-lite>
                 <span class = "breadcrumb-text">${item.label}</span>
               </button>
             `}
 
             ${!isCurrent ? html `
-              <span class = "breadcrumb-separator"> > </span>`
+              <span class = "breadcrumb-separator" aria-hidden = "true"> > </span>`
               : ""}
           `;
           })} 
         </nav>
-        <simple-icon-button-lite id = "close" class="close-button" icon = "close" label = "Close" @click=${this._closePanel}></simple-icon-button-lite>
+        <simple-icon-button-lite id = "close" class = "close-button" icon = "close" label = "Close" @click=${this._closePanel}></simple-icon-button-lite>
       </div>
       <div class = "panel-shell">
         <div class = "panel-header">
           <div class = "panel-title-wrapper">
-            <simple-icon-lite class = "panel-title-icon" icon="${currentBreadcrumb?.icon || ""}"></simple-icon-lite>
+            <simple-icon-lite class = "panel-title-icon" icon = "${currentBreadcrumb?.icon || ""}" aria-hidden = "true"></simple-icon-lite>
             <h2 class = "panel-title">${this.title}</h2>
           </div>
           <div class= "panel-description">
@@ -416,11 +442,17 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         </div>
         <div class = "editor-controls">
           <div class = "language-toggle">
-            <button class = ${this.selectedLanguage === "javascript" ? "active" : ""} 
+            <button 
+            type = "button"
+            class = ${this.selectedLanguage === "javascript" ? "active" : ""} 
+            .ariaPressed = ${this.selectedLanguage === "javascript" ? "true" : "false"}
             @click=${() => this._setLanguage("javascript")}>JavaScript</button>
-            <button class = ${this.selectedLanguage === "css" ? "active" : ""} 
+            <button 
+            type = "button"
+            class = ${this.selectedLanguage === "css" ? "active" : ""} 
+            .ariaPressed = ${this.selectedLanguage === "css" ? "true" : "false"}
             @click=${() => this._setLanguage("css")}>CSS</button>
-            </div>
+          </div>
         </div>
         <div class = "panel-content">
           <slot></slot>
