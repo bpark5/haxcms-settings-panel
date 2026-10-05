@@ -256,14 +256,21 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
         @media (max-width: 480px) {
           .overlay {
-            padding: var(--ddd-spacing-2);
+            padding: var(--ddd-spacing-4);
           }
           .authentication-prompt {
-            width: 100%;
-            max-height: calc(100dvh - var(--ddd-spacing-4));
+            width: 90%;
+            max-width: 360px;
+            max-height: calc(100dvh - var(--ddd-spacing-8));
+          }
+          .titlebar {
+            padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
           }
           .prompt-content {
-            padding: var(--ddd-spacing-2);
+            padding: var(--ddd-spacing-3);
+          }
+          .actions {
+            margin-top: var(--ddd-spacing-3);
           }
         }
         @media (max-height: 500px) and (orientation: landscape) {
