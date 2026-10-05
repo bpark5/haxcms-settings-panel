@@ -553,21 +553,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   authenticate(password) {
-    fetch("./mock-authentication-responses.json")
-    .then((resp) => resp.json())
-    .then((data) => {
-      if (password === "demo123") {
-        this.authenticationSucceeded();
+  if (password === "demo123") {
+    this.authenticationSucceeded();
+  } else {
+    this.authenticationFailed(
+      "Authentication failed. Please check your password and try again.",);
       }
-      else {
-        this.authenticationFailed(data.failure.message);
-      }
-    })
-
-    .catch(() => {
-      this.authenticationFailed("Authentication request failed.");
-    });
-  }
+    }
 
   authenticationSucceeded() {
     this.password = "";

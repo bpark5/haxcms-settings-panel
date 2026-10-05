@@ -3,6 +3,7 @@ import babel from '@rollup/plugin-babel';
 import { rollupPluginHTML as html } from '@web/rollup-plugin-html';
 import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 import esbuild from 'rollup-plugin-esbuild';
+import copy from 'rollup-plugin-copy';
 
 export default {
   input: 'index.html',
@@ -16,20 +17,15 @@ export default {
   preserveEntrySignatures: false,
 
   plugins: [
-    /** Enable using HTML as rollup entrypoint */
     html({
       minify: true,
     }),
-    /** Resolve bare module imports */
     nodeResolve(),
-    /** Minify JS, compile JS to a lower language target */
     esbuild({
       minify: true,
       target: ['chrome120', 'firefox121', 'edge120', 'safari17.2'],
     }),
-    /** Bundle assets references via import.meta.url */
     importMetaAssets(),
-    /** Minify html and css tagged template literals */
     babel({
       plugins: [
         [
@@ -48,6 +44,15 @@ export default {
           },
         ],
       ],
+    }),
+    copy({
+      targets: [
+        {
+          src: 'node_modules/monaco-editor/min/vs/**/*',
+          dest: 'public/monaco-editor/min/vs',
+        },
+      ],
+      hook: 'writeBundle',
     }),
   ],
 };
