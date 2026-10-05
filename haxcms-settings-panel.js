@@ -5,6 +5,7 @@
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
+import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-button-lite.js";
 import "./haxcms-authentication-prompt.js";
 
@@ -411,13 +412,13 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
             return html`
               ${isCurrent ? html`
                 <span class = "breadcrumb-current" aria-current="page">
-                  <simple-icon-lite class = "breadcrumb-icon" icon = "${item.icon}" aria-hidden = "true"></simple-icon-lite>
+                  <simple-icon-lite class = "breadcrumb-icon" src = ${this._getIconPath(item.icon)} aria-hidden = "true"></simple-icon-lite>
                   <span class = "breadcrumb-text">${item.label}</span>
                 </span>
               `
               : html`
               <button type = "button" class = "breadcrumb-button" @click = ${() => this._handleBreadcrumbClick(item)}>
-                <simple-icon-lite class = "breadcrumb-icon" icon = "${item.icon}" aria-hidden = "true"></simple-icon-lite>
+                <simple-icon-lite class = "breadcrumb-icon" src = ${this._getIconPath(item.icon)} aria-hidden = "true"></simple-icon-lite>
                 <span class = "breadcrumb-text">${item.label}</span>
               </button>
             `}
@@ -428,12 +429,12 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
           `;
           })} 
         </nav>
-        <simple-icon-button-lite id = "close" class = "close-button" icon = "close" label = "Close" @click=${this._closePanel}></simple-icon-button-lite>
+        <simple-icon-button-lite id = "close" class = "close-button" src = ${this._getIconPath("close")} label = "Close" @click=${this._closePanel}></simple-icon-button-lite>
       </div>
       <div class = "panel-shell">
         <div class = "panel-header">
           <div class = "panel-title-wrapper">
-            <simple-icon-lite class = "panel-title-icon" icon = "${currentBreadcrumb?.icon || ""}" aria-hidden = "true"></simple-icon-lite>
+            <simple-icon-lite class = "panel-title-icon" src = ${this._getIconPath(currentBreadcrumb?.icon || "")} aria-hidden = "true"></simple-icon-lite>
             <h2 class = "panel-title">${this.title}</h2>
           </div>
           <div class= "panel-description">
@@ -463,6 +464,17 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       </div>
       <haxcms-authentication-prompt></haxcms-authentication-prompt>
     </div>`;
+  }
+
+  _getIconPath(icon) {
+    const icons = {
+      settings: new URL("./icons/settings.svg", import.meta.url).href,
+      code: new URL("./icons/code.svg", import.meta.url).href,
+      close: new URL("./icons/close.svg", import.meta.url).href,
+      visibility: new URL("./icons/visibility.svg", import.meta.url).href,
+    };
+
+    return icons[icon] || "";
   }
 
   firstUpdated() {

@@ -27,3 +27,4 @@ custom-elements.json
 
 .vercel
 .env*.local
+.env*
