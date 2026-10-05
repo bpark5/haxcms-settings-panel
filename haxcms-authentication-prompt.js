@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
+import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-button-lite.js";
 import "@haxtheweb/simple-fields/lib/simple-fields-field.js";
 
@@ -321,7 +322,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
                ? html`
               <simple-icon-button-lite
                 class="close-button"
-                icon="close"
+                src=${this._getIconPath("close")}
                 label="Close"
                 @click=${this.closePrompt}
               >
@@ -356,7 +357,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               </simple-fields-field>
 
               <simple-icon-button-lite
-                icon=${this.showPassword ? "visibility-off" : "visibility"}
+                src=${this._getIconPath(this.showPassword ? "visibility-off" : "visibility")}
                 label=${this.showPassword ? "Hide password" : "Show password"}
                 class="show-password"
                 @click=${this.togglePassword}
@@ -409,6 +410,16 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         </div>
       </div>
     `;
+  }
+
+  _getIconPath(icon) {
+    const icons = {
+      close: new URL("./icons/close.svg", import.meta.url).href,
+      visibility: new URL("./icons/visibility.svg", import.meta.url).href,
+      "visibility-off": new URL("./icons/visibility-off.svg", import.meta.url).href,
+    };
+
+    return icons[icon] || "";
   }
 
   open(required = false) {
