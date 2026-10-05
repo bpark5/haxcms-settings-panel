@@ -24,3 +24,6 @@
 storybook-static
 custom-elements.json
 .vercel
+
+.vercel
+.env*.local
