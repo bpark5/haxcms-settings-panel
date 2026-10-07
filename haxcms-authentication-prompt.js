@@ -577,13 +577,30 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   authenticate(password) {
-  if (password === "demo123") {
-    this.authenticationSucceeded();
-  } else {
-    this.authenticationFailed(
-      "Authentication failed. Please check your password and try again.",);
-      }
-    }
+    fetch("/api/mock-authentication", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          this.authenticationSucceeded();
+        } else {
+          this.authenticationFailed(
+            data.message
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error during authentication:", error);
+        this.authenticationFailed(
+          "An error occurred during authentication. Please try again."
+        );
+      });
+  }
 
   authenticationSucceeded() {
     this.password = "";
@@ -592,6 +609,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.authenticating = false;
     this.opened = false;
   }
+      
+
 
   authenticationFailed(
     message = "Authentication failed. Please check your password and try again.",
@@ -600,7 +619,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.showPassword = false;
     this.authenticating = false;
     this.errorMessage = message;
-
+  
     this.updateComplete.then(() => {
       this.shadowRoot
         ?.querySelector("#password")
@@ -608,6 +627,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     });
   }
 }
+
 
 globalThis.customElements.define(
   HaxcmsAuthenticationPrompt.tag,
