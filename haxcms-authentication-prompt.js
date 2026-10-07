@@ -96,10 +96,33 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         .close-button {
           width: var(--ddd-spacing-10);
           height: var(--ddd-spacing-10);
-          --simple-icon-color: var(--ddd-theme-default-white);
-          --simple-icon-button-focus-color:var(--ddd-theme-default-skyBlue);
+          cursor: pointer;
+          border: none;
+          background: transparent;
+          color: var(--ddd-theme-default-white);
+          border-radius: var(--ddd-radius-circle);
+        }
+
+        .close-button simple-icon-lite{
           --simple-icon-width: var(--ddd-font-size-m);
           --simple-icon-height: var(--ddd-font-size-m);
+          --simple-icon-color: currentColor;
+        }
+
+        .close-button:hover simple-icon-lite {
+          color: var(--ddd-theme-default-skyBlue);
+        }
+
+        .close-button:focus-visible {
+          outline: none;
+          border: none;
+        }
+
+        .close-button:focus-visible simple-icon-lite {
+          outline: 2px solid var(--ddd-theme-default-skyBlue);
+          outline-offset: 2px;
+          border-radius: var(--ddd-radius-circle);
+          --simple-icon-color: var(--ddd-theme-default-skyBlue);
         }
 
         .prompt-content {
@@ -320,13 +343,14 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
               ${!this.required
                ? html`
-              <simple-icon-button-lite
+              <button
                 class="close-button"
-                src=${this._getIconPath("close")}
-                label="Close"
+                type="button"
+                aria-label="Close"
                 @click=${this.closePrompt}
               >
-              </simple-icon-button-lite>
+                <simple-icon-lite src=${this._getIconPath("close")}></simple-icon-lite>
+              </button>
                  `
                  : ""}
           </div>
