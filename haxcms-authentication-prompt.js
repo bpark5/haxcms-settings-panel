@@ -51,7 +51,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           padding: var(--ddd-spacing-4);
           box-sizing: border-box;
           overflow-y: auto;
-          background: rgba(0, 0, 0, 0.45);
+          background: rgba(0, 0, 0, 0.9);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(4px);
           z-index: 1000;
         }
 
@@ -448,6 +450,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
           <div class="titlebar">
             <h3 id="authentication-title">
+              <simple-icon-lite
+              src=${this._getIconPath("lock")}
+              ></simple-icon-lite>
               Authentication Needed
             </h3>
 
@@ -552,6 +557,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
       close: new URL("./icons/close.svg", import.meta.url).href,
       visibility: new URL("./icons/visibility.svg", import.meta.url).href,
       "visibility-off": new URL("./icons/visibility-off.svg", import.meta.url).href,
+      lock: new URL("./icons/lock.svg", import.meta.url).href,
     };
 
     return icons[icon] || "";
