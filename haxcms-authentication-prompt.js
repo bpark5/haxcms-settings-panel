@@ -141,11 +141,11 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         }
 
         .password-input {
+          --visibility-button-size: var(--ddd-spacing-8);
           display: flex;
           align-items: center;
           width: 100%;
           margin-top: var(--ddd-spacing-3);
-          gap: var(--ddd-spacing-2);
         }
 
         .password-input simple-fields-field {
@@ -161,14 +161,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           
           --simple-fields-accent-color: var(--ddd-theme-default-skyBlue);
 
-          --simple-fields-background-color: light-dark(
-            var(--ddd-theme-default-limestoneMaxLight),
-            var(--ddd-theme-default-black)
-          );
-          --simple-fields-border-color: light-dark(
-            var(--ddd-theme-default-black),
-            var(--ddd-theme-default-white)
-          );
+          --simple-fields-background-color: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
+          --simple-fields-border-color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
         }
 
         .password-input simple-fields-field::part(option-input) {
@@ -176,7 +170,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           padding-top: var(--ddd-spacing-3);
           padding-bottom: var(--ddd-spacing-2);
           padding-left: var(--ddd-spacing-3);
-          padding-right: var(--ddd-spacing-3);
+          padding-right: calc(var(--visibility-button-size) + var(--ddd-spacing-3));
           font-size: var(--ddd-font-size-3xs);
           border-radius: var(--ddd-radius-sm);
         }
@@ -199,14 +193,37 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         }
 
         .show-password {
-          flex: 0 0 auto;
-          cursor: pointer;
-          margin-bottom: 0;
+          flex: 0 0 var(--visibility-button-size);
+          width: var(--visibility-button-size);
+          height: var(--visibility-button-size);
 
-          --simple-icon-color: light-dark(
+          margin-left: calc(-1 * var(--visibility-button-size));
+          transform: translateX(calc(-1 * var(--ddd-spacing-2)));
+
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+
+          padding: 0;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          z-index: 1;
+
+          color: light-dark(
             var(--ddd-theme-default-black),
             var(--ddd-theme-default-white)
           );
+        }
+
+        .show-password simple-icon-lite {
+          --simple-icon-width: var(--ddd-font-size-m);
+          --simple-icon-height: var(--ddd-font-size-m);
+          --simple-icon-color: currentColor;
+        }
+
+        .show-password:hover simple-icon-lite {
+          opacity: 0.8;
         }
 
         .error-message {
@@ -278,40 +295,133 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           box-shadow: none;
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
           .overlay {
-            padding: var(--ddd-spacing-4);
+            padding: var(--ddd-spacing-2);
           }
+
           .authentication-prompt {
             width: 90%;
             max-width: 360px;
             max-height: calc(100dvh - var(--ddd-spacing-8));
           }
+
           .titlebar {
-            padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
+            padding: var(--ddd-spacing-1);
           }
+
+          .titlebar h3 {
+            font-size: var(--ddd-font-size-s);
+            padding-left: var(--ddd-spacing-2);
+          }
+
+          .close-button {
+            width: var(--ddd-spacing-8);
+            height: var(--ddd-spacing-8);
+
+            --simple-icon-width: var(--ddd-font-size-m);
+            --simple-icon-height: var(--ddd-font-size-m);
+          }
+
           .prompt-content {
             padding: var(--ddd-spacing-3);
           }
+
+          .prompt-content p {
+            font-size: var(--ddd-font-size-4xs);
+          }
+
+          .password-input simple-fields-field::part(option-input) {
+            font-size: var(--ddd-font-size-4xs);
+          }
+
+          .show-password simple-icon-lite {
+            --simple-icon-width: var(--ddd-font-size-s);
+            --simple-icon-height: var(--ddd-font-size-s);
+          }
+
+          .error-message {
+            font-size: var(--ddd-font-size-4xs);
+          }
+
+          .continue-button,
+          .back-button {
+            font-size: var(--ddd-font-size-2xs);
+            padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
+          }
+
           .actions {
             margin-top: var(--ddd-spacing-3);
           }
         }
-        @media (max-height: 500px) and (orientation: landscape) {
+
+        @media (max-width: 900px) and (max-height: 500px) {
           .overlay {
             align-items: flex-start;
             padding: var(--ddd-spacing-2);
           }
+
           .authentication-prompt {
+            width: 90%;
+            max-width: 500px;
             max-height: calc(100dvh - var(--ddd-spacing-4));
           }
+
           .titlebar {
-            padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
+            padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
           }
+
+          .titlebar h3 {
+            font-size: var(--ddd-font-size-s);
+            padding-left: var(--ddd-spacing-2);
+          }
+
+          .close-button {
+            width: var(--ddd-spacing-8);
+            height: var(--ddd-spacing-8);
+
+            --simple-icon-width: var(--ddd-font-size-m);
+            --simple-icon-height: var(--ddd-font-size-m);
+          }
+
           .prompt-content {
             padding: var(--ddd-spacing-2);
           }
-        }
+
+          .prompt-content p {
+            font-size: var(--ddd-font-size-4xs);
+          }
+
+          .password-input {
+            margin-top: var(--ddd-spacing-2);
+          }
+
+          .password-input simple-fields-field::part(option-input) {
+            font-size: var(--ddd-font-size-4xs);
+            padding-top: var(--ddd-spacing-2);
+            padding-bottom: var(--ddd-spacing-2);
+          }
+
+          .show-password simple-icon-lite {
+            --simple-icon-width: var(--ddd-font-size-s);
+            --simple-icon-height: var(--ddd-font-size-s);
+          }
+
+          .error-message {
+            font-size: var(--ddd-font-size-4xs);
+            margin-top: var(--ddd-spacing-1);
+          }
+
+          .continue-button,
+          .back-button {
+            font-size: var(--ddd-font-size-2xs);
+            padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
+          }
+
+          .actions {
+            margin-top: var(--ddd-spacing-2);
+          }
+}
       `,
     ];
   }
@@ -380,14 +490,15 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               >
               </simple-fields-field>
 
-              <simple-icon-button-lite
-                src=${this._getIconPath(this.showPassword ? "visibility-off" : "visibility")}
-                label=${this.showPassword ? "Hide password" : "Show password"}
+              <button
+                type="button"
+                aria-label=${this.showPassword ? "Hide password" : "Show password"}
                 class="show-password"
                 @click=${this.togglePassword}
                 ?disabled=${this.authenticating}
               >
-              </simple-icon-button-lite>
+                <simple-icon-lite src=${this._getIconPath(this.showPassword ? "visibility-off" : "visibility")}></simple-icon-lite>
+              </button>
 
             </div>
 
