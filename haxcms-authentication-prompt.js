@@ -366,7 +366,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               <simple-fields-field
                 id="password"
                 type=${this.showPassword ? "text" : "password"}
-                value=${this.password}
+                .value=${this.password}
                 @value-changed=${this.passwordChanged}
                 @keydown=${this.handleKeydown}
                 label="Password"
@@ -498,7 +498,10 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
   passwordChanged(event) {
     this.password = event.detail?.value ?? event.target.value ?? "";
-    this.errorMessage = "";
+    if (this.password) {
+      this.errorMessage = "";
+    }
+
   }
 
   togglePassword() {
@@ -577,6 +580,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   authenticate(password) {
+    console.log("Password being sent:", password);
     fetch("/api/mock-authentication", {
       method: "POST",
       headers: {
