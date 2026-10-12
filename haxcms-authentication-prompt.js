@@ -1,7 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
-import "@haxtheweb/simple-icon/lib/simple-icon-button-lite.js";
 import "@haxtheweb/simple-fields/lib/simple-fields-field.js";
 
 export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
@@ -240,14 +239,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
        .actions {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: flex-end;
           gap: var(--ddd-spacing-3);
           margin-top: var(--ddd-spacing-4);
         }
 
         
-        .continue-button,
-        .back-button {
+        .continue-button{
           min-height: 44px;
           font-family: var(--ddd-font-navigation);
           font-size: var(--ddd-font-size-xs);
@@ -456,18 +454,14 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               Authentication Needed
             </h3>
 
-              ${!this.required
-               ? html`
               <button
                 class="close-button"
                 type="button"
-                aria-label="Close"
-                @click=${this.closePrompt}
+                aria-label=${this.required ? "Back to settings" : "Close"}
+                @click=${this.handleClose}
               >
                 <simple-icon-lite src=${this._getIconPath("close")}></simple-icon-lite>
               </button>
-                 `
-                 : ""}
           </div>
 
           <div class="prompt-content">
@@ -520,19 +514,6 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               : ""}
 
       <div class="actions">
-
-  ${this.required
-    ? html`
-        <button
-          class="back-button"
-          type="button"
-          @click=${this.goBack}
-        >
-          Back
-        </button>
-      `
-    : html`<span></span>`}
-
         <button
         class="continue-button"
         type="button"
@@ -545,6 +526,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         </button>
 
         </div>
+
 
           </div>
         </div>
@@ -594,6 +576,14 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           })
         );
       }
+
+    handleClose() {
+      if (this.required) {
+        this.goBack();
+      } else {
+        this.closePrompt();
+      }
+    } 
 
   closePrompt() {
     if (this.required) {
