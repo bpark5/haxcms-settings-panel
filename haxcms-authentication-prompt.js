@@ -262,27 +262,14 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           border: none;
         }
 
-       
-        .back-button {
-          background-color: transparent;
-          color: light-dark(
-            var(--ddd-theme-default-black),
-            var(--ddd-theme-default-white)
-          );
-          border: 2px solid currentColor;
-        }
-
-
-        .continue-button:hover,
-        .back-button:hover {
+        .continue-button:hover{
           box-shadow: var(--ddd-boxShadow-sm);
           transform: translateY(-1px);
           transition: 0.3s all ease-in-out;
         }
 
         
-        .continue-button:focus-visible,
-        .back-button:focus-visible {
+        .continue-button:focus-visible{
           outline: 3px solid var(--ddd-theme-default-skyBlue);
           outline-offset: 2px;
         }
@@ -344,8 +331,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
             font-size: var(--ddd-font-size-4xs);
           }
 
-          .continue-button,
-          .back-button {
+          .continue-button{
             font-size: var(--ddd-font-size-2xs);
             padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
           }
@@ -412,8 +398,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
             margin-top: var(--ddd-spacing-1);
           }
 
-          .continue-button,
-          .back-button {
+          .continue-button {
             font-size: var(--ddd-font-size-2xs);
             padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
           }
@@ -467,7 +452,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           <div class="prompt-content">
 
             <p id="authentication-description">
-              Please enter your password to upload your file to the HAX site:
+              Enter your HAX account password to continue to site settings.
             </p>
 
             <div class="password-input">
@@ -554,9 +539,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.opened = true;
 
     this.updateComplete.then(() => {
-      this.shadowRoot
-        ?.querySelector("#password")
-        ?.focus();
+      if (this.shadowRoot) {
+        const passwordField = this.shadowRoot.querySelector("#password");
+
+        if (passwordField) {
+          passwordField.focus();
+        }
+      }
     });
   }
         goBack() {
@@ -604,7 +593,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   passwordChanged(event) {
-    this.password = event.detail?.value ?? event.target.value ?? "";
+    this.password = event.detail && event.detail.value !== undefined
+    ? event.detail.value
+    : event.target.value || "";
     if (this.password) {
       this.errorMessage = "";
     }
@@ -617,7 +608,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   this.showPassword = !this.showPassword;
 
   this.updateComplete.then(() => {
-    const passwordField = this.shadowRoot?.querySelector("#password");
+    const passwordField = this.shadowRoot
+    ? this.shadowRoot.querySelector("#password")
+    : null;
 
     if (passwordField) {
       passwordField.value = currentPassword;
@@ -629,9 +622,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           return; 
         } 
 
-        const dialog = this.shadowRoot?.querySelector( 
-          ".authentication-prompt", 
-        ); 
+        const dialog = this.shadowRoot
+        ? this.shadowRoot.querySelector(".authentication-prompt")
+        : null;
 
         if (!dialog) { 
           return; 
@@ -687,7 +680,6 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   authenticate(password) {
-    console.log("Password being sent:", password);
     fetch("/api/mock-authentication", {
       method: "POST",
       headers: {
@@ -719,6 +711,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.errorMessage = "";
     this.authenticating = false;
     this.opened = false;
+
+    this.dispatchEvent(
+      new CustomEvent("authentication-success", {
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
       
 
@@ -732,9 +731,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.errorMessage = message;
   
     this.updateComplete.then(() => {
-      this.shadowRoot
-        ?.querySelector("#password")
-        ?.focus();
+      if (this.shadowRoot) {
+        const passwordField = this.shadowRoot.querySelector("#password");
+
+        if (passwordField) {
+          passwordField.focus();
+        }
+      }
     });
   }
 }
