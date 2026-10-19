@@ -18,6 +18,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.errorMessage = "";
     this.authenticating = false;
     this.required = false;
+
   }
 
   static get properties() {
@@ -111,7 +112,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         }
 
         .close-button:hover simple-icon-lite {
-          color: var(--ddd-theme-default-skyBlue);
+          --simple-icon-color: var(--ddd-theme-default-skyBlue);
         }
 
         .close-button:focus-visible {
@@ -452,7 +453,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           <div class="prompt-content">
 
             <p id="authentication-description">
-              Enter your HAX account password to continue to site settings.
+              ${this.required 
+                ? "Enter your HAX account password to continue to site settings."
+                : "Enter your HAX account password to save your code."}
             </p>
 
             <div class="password-input">
@@ -618,6 +621,12 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   });
     }
     handleDialogKeydown(event) { 
+      if (event.key === "Escape") {
+        if (!this.required) {
+          this.closePrompt();
+        }
+        return;
+      }
         if (event.key !== "Tab") { 
           return; 
         } 
@@ -632,7 +641,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
         const focusableElements = [ 
           ...dialog.querySelectorAll( 
-            "simple-fields-field, simple-icon-button-lite, button:not([disabled])", 
+            "simple-fields-field, button:not([disabled])", 
           ), 
         ].filter((element) => !element.hasAttribute("disabled")); 
 
@@ -661,10 +670,6 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
       !this.authenticating
     ) {
       this.continueAuthentication();
-    }
-
-    if (event.key === "Escape" && !this.required) {
-      this.closePrompt();
     }
   }
 
