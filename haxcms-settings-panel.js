@@ -6,7 +6,6 @@ import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
-import "@haxtheweb/simple-icon/lib/simple-icon-button-lite.js";
 import "./haxcms-authentication-prompt.js";
 
 /**
@@ -457,7 +456,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       <div class = "panel-shell">
         <div class = "panel-header">
           <div class = "panel-title-wrapper">
-            <simple-icon-lite class = "panel-title-icon" src = ${this._getIconPath(currentBreadcrumb?.icon || "")} aria-hidden = "true"></simple-icon-lite>
+            <simple-icon-lite class = "panel-title-icon" src = ${this._getIconPath(currentBreadcrumb ? currentBreadcrumb.icon : "")} aria-hidden = "true"></simple-icon-lite>
             <h2 class = "panel-title">${this.title}</h2>
           </div>
           <div class= "panel-description">
@@ -485,7 +484,10 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
           <button class = "action-button" @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
         </div>
       </div>
-      <haxcms-authentication-prompt></haxcms-authentication-prompt>
+      <haxcms-authentication-prompt
+        @authentication-success=${this.handleAuthenticationSuccess}
+        @authentication-cancel=${this.handleAuthenticationCancel}
+      ></haxcms-authentication-prompt>
     </div>`;
   }
 
@@ -507,7 +509,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   updated(changedProperties) {
-    super.updated?.(changedProperties);
+    super.updated(changedProperties);
 
     if (
       changedProperties.has("panelVisible") &&
@@ -528,11 +530,39 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   _openAuthenticationPrompt(required = false) {
-  const prompt = this.shadowRoot.querySelector(
-    "haxcms-authentication-prompt"
-  );
+    const prompt = this.shadowRoot.querySelector(
+      "haxcms-authentication-prompt"
+    );
 
-  prompt?.open(required);
+    if (prompt) {
+      prompt.open(required);
+    }
+  } 
+
+  async handleAuthenticationSuccess() {
+    const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
+    await prompt.updateComplete;
+    if (this.panelVisible) {
+      const actionButton = this.shadowRoot.querySelector(".action-button");
+
+      if (actionButton) {
+        actionButton.focus();
+      }
+    }
+  }
+
+  async handleAuthenticationCancel() {
+    const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
+
+    await prompt.updateComplete;
+
+    if (this.panelVisible) {
+      const actionButton = this.shadowRoot.querySelector(".action-button");
+    
+      if (actionButton) {
+        actionButton.focus();
+      }
+    }
   }
 
   _setLanguage(language) {
