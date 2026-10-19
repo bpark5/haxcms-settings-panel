@@ -486,6 +486,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       </div>
       <haxcms-authentication-prompt
         @authentication-success=${this.handleAuthenticationSuccess}
+        @authentication-cancel=${this.handleAuthenticationCancel}
       ></haxcms-authentication-prompt>
     </div>`;
   }
@@ -544,6 +545,20 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     if (this.panelVisible) {
       const actionButton = this.shadowRoot.querySelector(".action-button");
 
+      if (actionButton) {
+        actionButton.focus();
+      }
+    }
+  }
+
+  async handleAuthenticationCancel() {
+    const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
+
+    await prompt.updateComplete;
+
+    if (this.panelVisible) {
+      const actionButton = this.shadowRoot.querySelector(".action-button");
+    
       if (actionButton) {
         actionButton.focus();
       }

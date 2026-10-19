@@ -18,7 +18,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.errorMessage = "";
     this.authenticating = false;
     this.required = false;
-
+    this.authController = null;
   }
 
   static get properties() {
@@ -534,6 +534,10 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   open(required = false) {
+    if (this.authController) {
+      this.authController.abort();
+    }
+    this.authController = null;
     this.password = "";
     this.showPassword = false;
     this.errorMessage = "";
@@ -551,36 +555,47 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
       }
     });
   }
-        goBack() {
-        this.password = "";
-        this.showPassword = false;
-        this.errorMessage = "";
-        this.authenticating = false;
-        this.opened = false;
+  goBack() {
+    if (this.authController) {
+      this.authController.abort();
+    }
+    this.authController = null;
 
-        this.dispatchEvent(
-          new CustomEvent("breadcrumb-click", {
-            detail: {
-              screen: "settings",
-            },
-            bubbles: true,
-            composed: true,
-          })
-        );
-      }
+    this.password = "";
+    this.showPassword = false;
+    this.errorMessage = "";
+    this.authenticating = false;
+    this.opened = false;
 
-    handleClose() {
-      if (this.required) {
-        this.goBack();
-      } else {
-        this.closePrompt();
-      }
-    } 
+    this.dispatchEvent(
+      new CustomEvent("breadcrumb-click", {
+        detail: {
+          screen: "settings",
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  handleClose() {
+    if (this.required) {
+      this.goBack();
+    } else {
+      this.closePrompt();
+    }
+  } 
 
   closePrompt() {
     if (this.required) {
       return;
     }
+
+    if (this.authController) {
+      this.authController.abort();
+    }
+    this.authController = null;
+
     this.password = "";
     this.showPassword = false;
     this.errorMessage = "";
@@ -622,6 +637,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     }
     handleDialogKeydown(event) { 
       if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
         if (!this.required) {
           this.closePrompt();
         }
@@ -685,15 +702,32 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   authenticate(password) {
+    if (this.authController) {
+      this.authController.abort();
+    }
+
+    const controller = new AbortController();
+    this.authController = controller;
+
     fetch("/api/mock-authentication", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ password }),
+      signal: controller.signal,
     })
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (!response.ok && response.status !== 401) {
+          throw new Error("Authentication server error. Please try again later.")
+        }
+        return response.json();
+      })
       .then((data) => {
+        if (controller.signal.aborted || !this.opened) {
+          return;
+        }
+
         if (data.success) {
           this.authenticationSucceeded();
         } else {
@@ -703,10 +737,18 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         }
       })
       .catch((error) => {
+        if (controller.signal.aborted || !this.opened) {
+          return;
+        }
         console.error("Error during authentication:", error);
         this.authenticationFailed(
-          "An error occurred during authentication. Please try again."
+          "Unable to complete authentication. Please try again later."
         );
+      })
+      .finally(() => {
+        if (this.authController === controller) {
+          this.authController = null;
+        }
       });
   }
 
