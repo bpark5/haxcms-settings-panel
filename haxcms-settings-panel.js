@@ -62,9 +62,9 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         justify-content: space-between;
         padding: var(--ddd-spacing-3);
         background: var(--ddd-theme-default-black);
-        margin-bottom: 0;
+        margin-bottom: var(--ddd-spacing-0);
         position: sticky;
-        top: 0;
+        top: var(--ddd-spacing-0);
         z-index: 1;
       }
 
@@ -89,7 +89,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       .breadcrumb-button {
         background: transparent;
         border: none;
-        padding: 0;
+        padding: var(--ddd-spacing-0);
         cursor: pointer;
       }
 
@@ -111,7 +111,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       .breadcrumb-separator {
         display: inline-flex;
         align-items: center;
-        margin: 0 var(--ddd-spacing-2);
+        margin: var(--ddd-spacing-0) var(--ddd-spacing-2);
       }
 
       .close-button {
@@ -147,8 +147,8 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .panel-shell {
-        margin-top: 0;
-        padding-top: 0;
+        margin-top: var(--ddd-spacing-0);
+        padding-top: var(--ddd-spacing-0);
         background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
       }
 
@@ -168,14 +168,14 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .panel-title {
-        margin: 0;
+        margin: var(--ddd-spacing-0);
         font-family: var(--ddd-font-primary);
         font-size: var(--ddd-font-size-m);
         font-weight: var(--ddd-font-weight-bold);
       }
 
       .panel-description {
-        margin: 0;
+        margin: var(--ddd-spacing-0);
         padding-top: var(--ddd-spacing-1);
         font-family: var(--ddd-font-primary);
         font-size: var(--ddd-font-size-3xs);
@@ -193,7 +193,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         align-items: center;
         justify-content: flex-end;
         padding: var(--ddd-spacing-4);
-        margin-top: 0;
+        margin-top: var(--ddd-spacing-0);
       }
 
       .editor-controls {
@@ -241,12 +241,12 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .language-toggle button:first-child:focus-visible {
-          border-radius: var(--ddd-radius-sm) 0 0 var(--ddd-radius-sm);
+          border-radius: var(--ddd-radius-sm) var(--ddd-spacing-0) var(--ddd-spacing-0) var(--ddd-radius-sm);
         }
 
         /* CSS button */
         .language-toggle button:last-child:focus-visible {
-          border-radius: 0 var(--ddd-radius-sm) var(--ddd-radius-sm) 0;
+          border-radius: var(--ddd-spacing-0) var(--ddd-radius-sm) var(--ddd-radius-sm) var(--ddd-spacing-0);
         }
 
       .action-button {
@@ -294,7 +294,9 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         .close-button {
           width: var(--ddd-spacing-8);
           height: var(--ddd-spacing-8);
+        }
 
+        .close-button simple-icon-lite{
           --simple-icon-width: var(--ddd-font-size-m);
           --simple-icon-height: var(--ddd-font-size-m);
         }
@@ -363,7 +365,9 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         .close-button {
           width: var(--ddd-spacing-8);
           height: var(--ddd-spacing-8);
+        }
 
+        .close-button simple-icon-lite{
           --simple-icon-width: var(--ddd-font-size-m);
           --simple-icon-height: var(--ddd-font-size-m);
         }
