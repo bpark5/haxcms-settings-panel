@@ -25,7 +25,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     this.title = "";
     this.breadcrumbs = [];
     this.description = "";
-    this.actionButton = "";
+    this.actionButton = "Save";
     this.panelVisible = true;
     this.selectedLanguage = "javascript";
   }
@@ -244,10 +244,10 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
           border-radius: var(--ddd-radius-sm) var(--ddd-spacing-0) var(--ddd-spacing-0) var(--ddd-radius-sm);
         }
 
-        /* CSS button */
-        .language-toggle button:last-child:focus-visible {
-          border-radius: var(--ddd-spacing-0) var(--ddd-radius-sm) var(--ddd-radius-sm) var(--ddd-spacing-0);
-        }
+      /* CSS button */
+      .language-toggle button:last-child:focus-visible {
+        border-radius: var(--ddd-spacing-0) var(--ddd-radius-sm) var(--ddd-radius-sm) var(--ddd-spacing-0);
+      }
 
       .action-button {
         font-family: var(--ddd-font-navigation);
@@ -506,12 +506,6 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     return icons[icon] || "";
   }
 
-  firstUpdated() {
-    if (this.panelVisible) {
-      this._openAuthenticationPrompt(true);
-    }
-  }
-
   updated(changedProperties) {
     super.updated(changedProperties);
 
@@ -543,9 +537,20 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     }
   } 
 
-  async handleAuthenticationSuccess() {
+  async handleAuthenticationSuccess(event) {
     const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
     await prompt.updateComplete;
+
+    if (!event.detail.required) {
+      this.dispatchEvent (
+        new CustomEvent("save-request", {
+          detail: {language: this.selectedLanguage},
+          bubbles: true,
+          composed: true,
+          })
+      );
+    }
+
     if (this.panelVisible) {
       const actionButton = this.shadowRoot.querySelector(".action-button");
 
@@ -562,7 +567,6 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
 
     if (this.panelVisible) {
       const actionButton = this.shadowRoot.querySelector(".action-button");
-    
       if (actionButton) {
         actionButton.focus();
       }

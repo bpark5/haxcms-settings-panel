@@ -761,6 +761,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
     this.dispatchEvent(
       new CustomEvent("authentication-success", {
+        detail: { required: this.required},
         bubbles: true,
         composed: true,
       }),
