@@ -24,6 +24,9 @@
       background-color: var(--ddd-accent-2);
       color: var(--ddd-primary-17);
     }
+    code-editor[hidden] {
+      display: none !important;
+    }
   </style>
   <title>haxcms-settings-panel</title>
 </head>
@@ -40,7 +43,8 @@
     description="Insert your own JavaScript or CSS file to make your HAX site more customizable."
     actionButton="Save"
     panelVisible="true">
-      <code-editor id = "editor" language="javascript"></code-editor>
+      <code-editor id="javascript-editor" language="javascript"></code-editor>
+      <code-editor id="css-editor" language="css" hidden></code-editor>
     </haxcms-settings-panel>
   </div>
   <script type="module">
@@ -48,11 +52,19 @@
     import "@haxtheweb/code-editor/code-editor.js";
 
     const panel = document.querySelector("#settings-panel");
-    const editor = document.querySelector("#editor");
+    // Keep both editors mounted so each language retains its own draft.
+    const editors = {
+      javascript: document.querySelector("#javascript-editor"),
+      css: document.querySelector("#css-editor"),
+    };
 
     panel.addEventListener("language-change", (e) => {
-      console.log("Language changed to: ", e.detail.language);
-      editor.setAttribute("language", e.detail.language);
+      const language = e.detail.language;
+      if (!Object.hasOwn(editors, language)) return;
+
+      for (const [name, editor] of Object.entries(editors)) {
+        editor.hidden = name !== language;
+      }
     });
 
     panel.addEventListener("breadcrumb-click", (e) => {
