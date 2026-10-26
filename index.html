@@ -67,6 +67,49 @@
       }
     });
 
+    let saving = false;
+
+    panel.addEventListener("save-request", async (event) => {
+      if (saving) return;
+
+      const language = event.detail.language;
+      if (language !== "javascript") {
+        alert("CSS saving isn't implemented yet.");
+        return;
+      }
+
+      saving = true;
+      try {
+        const response = await fetch("/mock-save-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            language,
+            code: editors.javascript.value ?? "",
+          }),
+        });
+
+        if (!response.headers.get("content-type")?.includes("application/json")) {
+          throw new Error(
+            `Save endpoint returned HTTP ${response.status} instead of JSON. Restart vercel dev and reload this page.`,
+          );
+        }
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Unable to save.");
+        }
+
+        alert("JavaScript saved.");
+      } catch (error) {
+        alert(`Save failed: ${error.message}`);
+      } finally {
+        saving = false;
+      }
+    });
+
     panel.addEventListener("breadcrumb-click", (e) => {
       console.log("Navigate to:", e.detail.screen);
     })
