@@ -48,6 +48,10 @@ export default {
     copy({
       targets: [
         {
+          src: ['mock-site/preview.html', 'mock-site/preview.css'],
+          dest: 'public/mock-site',
+        },
+        {
           src: 'node_modules/monaco-editor/min/vs/**/*',
           dest: 'public/monaco-editor/min/vs',
         },
