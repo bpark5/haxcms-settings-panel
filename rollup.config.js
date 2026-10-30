@@ -52,7 +52,7 @@ export default {
     copy({
       targets: [
         {
-          src: ['mock-site/preview.html', 'mock-site/preview.css'],
+          src: ['mock-site/preview.html', 'mock-site/preview.css', 'mock-site/custom.js', 'mock-site/custom.css'],
           dest: 'public/mock-site',
         },
         {

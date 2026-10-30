@@ -65,6 +65,8 @@
       const language = e.detail.language;
       if (!Object.hasOwn(editors, language)) return;
 
+      document.querySelector("haxcms-code-workspace").selectedLanguage = language;
+
       for (const [name, editor] of Object.entries(editors)) {
         editor.hidden = name !== language;
       }
@@ -76,10 +78,7 @@
       if (saving) return;
 
       const language = event.detail.language;
-      if (language !== "javascript") {
-        alert("CSS saving isn't implemented yet.");
-        return;
-      }
+      if (!Object.hasOwn(editors, language)) return;
 
       saving = true;
       try {
@@ -90,7 +89,7 @@
           },
           body: JSON.stringify({
             language,
-            code: editors.javascript.value ?? "",
+            code: editors[language].value ?? "",
           }),
         });
 
@@ -105,7 +104,7 @@
           throw new Error(result.message || "Unable to save.");
         }
 
-        alert("JavaScript saved.");
+        alert(`${language === "css" ? "CSS" : "JavaScript"} saved.`);
       } catch (error) {
         alert(`Save failed: ${error.message}`);
       } finally {

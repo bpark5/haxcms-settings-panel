@@ -8,16 +8,16 @@ This is a representative local page, not a rendering of an actual HAX site. It i
 
 - Preserve `preview.css` as the baseline theme. Apply the CSS draft in a separate stylesheet after it so normal CSS cascade rules apply.
 - Run the JavaScript draft only after the fixture DOM and baseline assets are ready. The initial execution model is a classic browser script, so future Acorn checks must use `sourceType: "script"`.
-- Useful stable targets include `#page-title`, `.resource-card`, `#preview-action`, and `#preview-status`. The button intentionally has no built-in handler; a draft can add a click listener that updates the status text.
-- `custom.js` is the existing mock Save destination. This fixture deliberately does not load it: future previews must use the current accepted editor snapshot, independently of saving.
-- `haxcms-code-workspace` displays the fixture in a sandboxed iframe beside the editors. Draft execution, runtime reporting, revision checks, and fresh iframe creation remain for later stages. Opening this fixture directly does not provide that isolation.
-- The Rollup configuration copies the fixture HTML and CSS into `public/mock-site`. The workspace fetches both files, assembles a `srcdoc` document with the installed DDD variables, and supplies an explicit base URL for relative assets. Loading is canceled on disconnect and stale results are ignored; load failures appear beside the preview.
+- Useful stable targets include `#page-title`, `.resource-card`, `#preview-action`, and `#preview-status`. The button intentionally has no built-in handler; saved JavaScript can add a click listener that updates the status text.
+- `custom.js` and `custom.css` are fixed mock Save destinations for the same site. The workspace uses them to initialize the editors, then automatically applies valid drafts to fresh iframe instances. Save persists the selected language and does not trigger preview application.
+- `haxcms-code-workspace` displays the fixture in a sandboxed iframe beside the editors. Invalid drafts preserve the previous preview; observed runtime errors are reported through messages checked against the current iframe and run identifier. Opening this fixture directly does not provide that isolation.
+- The Rollup configuration copies the fixture HTML/CSS and both saved custom files into `public/mock-site`. The workspace fetches both files, assembles a `srcdoc` document with the installed DDD variables, and supplies an explicit base URL for relative assets. Loading is canceled on disconnect and stale results are ignored; load failures appear beside the preview.
 
 ## Actual site fidelity
 
 Replacing the fixture with a real site requires a defined source for page markup, theme styles, images/fonts, and component modules. It also requires explicit asset base URLs, loading order, and CORS/CSP rules compatible with an opaque-origin sandbox. Parent-page styles and custom-element registrations do not automatically carry into the iframe.
 
-The fixture does not load authentication, call the save endpoint, or execute draft code. Acorn syntax validation and isolated execution will be added in later stages; syntax validation does not establish code safety.
+The fixture does not load authentication or call the save endpoint. JavaScript drafts are checked with Acorn and scope analysis; CSS drafts are checked with CSSTree. Drafts run only in the isolated iframe and are serialized as data to prevent closing HTML tags in strings from altering the fixture markup. Validation does not establish code safety.
 
 ## Design and accessibility
 

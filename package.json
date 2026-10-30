@@ -33,6 +33,7 @@
         "@haxtheweb/i18n-manager": "^26.0.0",
         "@haxtheweb/simple-fields": "^26.8.0",
         "acorn": "^8.19.0",
+        "css-tree": "^3.2.1",
         "eslint-scope": "^8.4.0",
         "globals": "^17.13.0",
         "lit": "3.3.3"

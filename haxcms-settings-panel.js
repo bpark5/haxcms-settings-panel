@@ -28,6 +28,9 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     this.actionButton = "Save";
     this.panelVisible = true;
     this.selectedLanguage = "javascript";
+    this._validationState = {};
+    this.addEventListener("code-validation", this._handleCodeValidation);
+    this.addEventListener("preview-state", this._handlePreviewState);
   }
 
   // Lit reactive properties
@@ -39,7 +42,9 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       description: { type: String },
       actionButton: {type: String},
       panelVisible: {type: Boolean, reflect: true},
-      selectedLanguage: { type: String }
+      selectedLanguage: { type: String },
+      _validationState: { state: true },
+      _previewSaveState: { state: true }
     };
   }
 
@@ -260,7 +265,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         color: var(--ddd-theme-default-white);
       }
 
-      .action-button:hover, .action-button:focus-visible{
+      .action-button:not(:disabled):hover, .action-button:focus-visible{
         box-shadow: var(--ddd-boxShadow-sm);
         transform: translateY(-1px);
         transition: 0.3s all ease-in-out;
@@ -270,6 +275,11 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       .action-button:focus-visible {
         outline: 2px solid light-dark(var(--ddd-theme-default-black),var(--ddd-theme-default-white));
         border-radius: var(--ddd-radius-sm);
+      }
+
+      .action-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
       }
 
       /* For portrait mode phone */
@@ -426,6 +436,15 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   // Lit render the HTML
   render() {
     const currentBreadcrumb = this.breadcrumbs[this.breadcrumbs.length - 1];
+    const validation = this._validationState[this.selectedLanguage];
+    const saveDisabled = !!this.querySelector("haxcms-code-workspace") &&
+      (!validation || validation.pending || !validation.valid ||
+        !this._previewSaveState || !this._previewSaveState.canSave);
+    const saveHint = saveDisabled
+      ? (!validation || validation.pending || !validation.valid
+        ? (validation && validation.message) || "Waiting for code validation."
+        : (this._previewSaveState && this._previewSaveState.message) || "Waiting for preview.")
+      : "Save customization";
     return html`
     <div class="panel">
       <div class= "panel-titlebar">
@@ -485,7 +504,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
           <slot></slot>
         </div>
         <div class = "panel-actions">
-          <button class = "action-button" @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
+          <button class = "action-button" ?disabled=${saveDisabled} title=${saveHint} @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
         </div>
       </div>
       <haxcms-authentication-prompt
@@ -561,10 +580,22 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     }
   }
 
+  _handleCodeValidation(event) {
+    if (event.target !== this.querySelector("haxcms-code-workspace")) return;
+    const { language } = event.detail;
+    if (language !== "javascript" && language !== "css") return;
+    this._validationState = { ...this._validationState, [language]: event.detail };
+  }
+
   _validateCodeForSave() {
-    if (this.selectedLanguage !== "javascript") return true;
     const workspace = this.querySelector("haxcms-code-workspace");
-    return workspace?.validateJavaScriptDraft?.() ?? true;
+    if (!workspace) return true;
+    return workspace.validateDraft(this.selectedLanguage) && workspace.canSavePreview;
+  }
+
+  _handlePreviewState(event) {
+    if (event.target !== this.querySelector("haxcms-code-workspace")) return;
+    this._previewSaveState = event.detail;
   }
 
   async handleAuthenticationCancel() {
