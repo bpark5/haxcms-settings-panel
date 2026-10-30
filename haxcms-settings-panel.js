@@ -528,6 +528,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   _openAuthenticationPrompt(required = false) {
+    if (!required && !this._validateCodeForSave()) return;
     const prompt = this.shadowRoot.querySelector(
       "haxcms-authentication-prompt"
     );
@@ -541,7 +542,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
     await prompt.updateComplete;
 
-    if (!event.detail.required) {
+    if (!event.detail.required && this._validateCodeForSave()) {
       this.dispatchEvent (
         new CustomEvent("save-request", {
           detail: {language: this.selectedLanguage},
@@ -558,6 +559,12 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         actionButton.focus();
       }
     }
+  }
+
+  _validateCodeForSave() {
+    if (this.selectedLanguage !== "javascript") return true;
+    const workspace = this.querySelector("haxcms-code-workspace");
+    return workspace?.validateJavaScriptDraft?.() ?? true;
   }
 
   async handleAuthenticationCancel() {

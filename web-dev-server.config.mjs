@@ -1,5 +1,6 @@
 // import { hmrPlugin, presets } from '@open-wc/dev-server-hmr';
 import { writeFile } from 'node:fs/promises';
+import { validationDevPlugin } from './lib/validation-dev-plugin.mjs';
 
 const customCodeFile = new URL('./mock-site/custom.js', import.meta.url);
 const maxSaveBytes = 1024 * 1024;
@@ -91,6 +92,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   // appIndex: 'demo/index.html',
 
   plugins: [
+    validationDevPlugin(),
     /** Use Hot Module Replacement by uncommenting. Requires @open-wc/dev-server-hmr plugin */
     // hmr && hmrPlugin({ exclude: ['**/*/node_modules/**/*'], presets: [presets.litElement] }),
   ],

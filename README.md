@@ -14,6 +14,32 @@ The project currently focuses on providing an interface for editing custom JavaS
 
 ## Commands
 
+JavaScript drafts are parsed with Acorn and checked for undefined variable
+references with eslint-scope after 750 ms without editor changes. Browser and
+ECMAScript globals are allowed; declarations and function parameters are resolved
+by scope. The workspace displays errors with one-based line and column numbers.
+For example, a bare undeclared name is rejected even though it is valid syntax.
+Globals supplied by other site scripts are not assumed to exist; access those
+explicitly through `window` or `globalThis` where appropriate. This does not
+validate properties on those objects or guarantee that they exist at runtime.
+The panel rechecks JavaScript before opening save authentication and again before
+emitting `save-request`, so changes made during authentication are checked too.
+CSS is not validated by Acorn. The check uses classic-script syntax; imports and
+exports are not supported. A passing check does not guarantee runtime safety,
+detect infinite loops, or prove that code will work on the site. The sample
+iframe remains static and does not execute editor drafts yet.
+
+Restart the development server after dependency/configuration changes. The dev
+server and browser tests bundle the validator's CommonJS dependencies with
+esbuild; production Rollup uses CommonJS and JSON adapters.
+
+Validation tests:
+
+```sh
+node --test test/validate-javascript.test.mjs
+npx web-test-runner test/code-validation.test.js --node-resolve
+```
+
 - `npm install` - Install project dependencies
 - `npm start` - Start the frontend development server
 - `vercel dev` - Run the development server with the mock authentication API

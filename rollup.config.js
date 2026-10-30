@@ -4,6 +4,8 @@ import { rollupPluginHTML as html } from '@web/rollup-plugin-html';
 import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 import esbuild from 'rollup-plugin-esbuild';
 import copy from 'rollup-plugin-copy';
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 
 export default {
   input: 'index.html',
@@ -21,6 +23,8 @@ export default {
       minify: true,
     }),
     nodeResolve(),
+    json(),
+    commonjs(),
     esbuild({
       minify: true,
       target: ['chrome120', 'firefox121', 'edge120', 'safari17.2'],

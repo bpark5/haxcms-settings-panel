@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { DDD } from "@haxtheweb/d-d-d/d-d-d.js";
 import { DDDVariables } from "@haxtheweb/d-d-d/lib/DDDStyles.js";
+import { validateJavaScript } from "./lib/validate-javascript.js";
 
 /** Layout for persistent code editors and the isolated sample site. */
 export class HaxcmsCodeWorkspace extends DDD {
@@ -10,20 +11,48 @@ export class HaxcmsCodeWorkspace extends DDD {
       ...super.properties,
       _previewDocument: { state: true },
       _previewError: { state: true },
+      _validationMessage: { state: true },
     };
   }
 
   connectedCallback() {
     super.connectedCallback();
+    this._onEditorChange ||= this._scheduleValidation.bind(this);
+    // code-editor emits a non-bubbling value-changed event.
+    this.addEventListener("value-changed", this._onEditorChange, true);
     this._loadPreview();
   }
 
   disconnectedCallback() {
+    clearTimeout(this._validationTimer);
+    this.removeEventListener("value-changed", this._onEditorChange, true);
     super.disconnectedCallback();
 
     if (this._previewController) {
       this._previewController.abort();
     }
+  }
+
+  validateJavaScriptDraft() {
+    clearTimeout(this._validationTimer);
+    const editor = this.querySelector('code-editor[language="javascript"]');
+    if (!editor) return true;
+    const result = validateJavaScript(editor.value ?? "");
+    this._validationMessage = result.message;
+    this.dispatchEvent(new CustomEvent("code-validation", {
+      detail: { language: "javascript", ...result },
+      bubbles: true,
+      composed: true,
+    }));
+    return result.valid;
+  }
+
+  _scheduleValidation(event) {
+    const editor = this.querySelector('code-editor[language="javascript"]');
+    if (!editor || !event.composedPath().includes(editor)) return;
+    clearTimeout(this._validationTimer);
+    this._validationMessage = "Checking JavaScript…";
+    this._validationTimer = setTimeout(() => this.validateJavaScriptDraft(), 750);
   }
 
   async _loadPreview() {
@@ -112,6 +141,13 @@ export class HaxcmsCodeWorkspace extends DDD {
         border-bottom: var(--ddd-border-sm);
       }
 
+      .validation-status {
+        grid-column: 1 / -1;
+        margin: 0;
+        padding: var(--ddd-spacing-3);
+        overflow-wrap: anywhere;
+      }
+
       .editor-title, .preview-title {
         margin: 0;
         font-family: var(--ddd-font-navigation);
@@ -168,7 +204,7 @@ export class HaxcmsCodeWorkspace extends DDD {
             <p class = "editor-description">JavaScript and CSS drafts are kept separately.</p>
           </div>
           <div class = "editor">
-            <slot class = "editor-slot"></slot>
+            <slot class = "editor-slot" @slotchange=${this.validateJavaScriptDraft}></slot>
           </div>
         </div>
         <div class = "preview-section" aria-labelledby = "preview-heading">
@@ -186,6 +222,7 @@ export class HaxcmsCodeWorkspace extends DDD {
             sandbox = "allow-scripts"
           ></iframe>
         </div>
+        <p role="status" aria-live="polite" class="validation-status">${this._validationMessage || ""}</p>
       </div>
     `;
   }
