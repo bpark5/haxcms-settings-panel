@@ -62,6 +62,17 @@ npx web-test-runner test/code-validation.test.js --node-resolve
 - `npm run test` - Run tests
 - `npm run release` - Build, version bump, and publish
 
+Before committing, run `npm run precheck`, `npm test`, and `npm run build`.
+Precheck parses the project's JavaScript and rejects optional chaining for HAX
+toolchain compatibility. `npm test` runs both the Node backend/validation tests
+and the browser tests with this repo's runner configuration and coverage.
+CI runs the same checks before building; Pages deployment runs only on pushes
+to the default branch after those checks pass.
+
+The prototype retains its original DDD styling, skyBlue controls, and component
+base classes. Visual alignment and contrast corrections are deferred to HAX
+integration. The existing accessibility audit may flag skyBlue/white contrast.
+
 ## Local customization history
 
 The separate **History** button in the settings panel's bottom action bar opens

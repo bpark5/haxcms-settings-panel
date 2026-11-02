@@ -634,21 +634,22 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   _closeHistory(event) {
-    event?.preventDefault();
+    if (event) event.preventDefault();
     const dialog = this.shadowRoot.querySelector(".history-dialog");
-    if (dialog?.open) dialog.close();
+    if (dialog && dialog.open) dialog.close();
     this._historyOpen = false;
   }
 
   _historyClosed() {
     this._historyOpen = false;
-    this.shadowRoot.querySelector(".history-button")?.focus();
+    const button = this.shadowRoot.querySelector(".history-button");
+    if (button) button.focus();
   }
 
   async _loadHistoryRevision(event) {
     const workspace = this.querySelector("haxcms-code-workspace");
     const { language, revision } = event.detail;
-    if (await workspace?.loadHistoryRevision(language, revision)) {
+    if (workspace && await workspace.loadHistoryRevision(language, revision)) {
       workspace.selectedLanguage = language;
       this._setLanguage(language);
       this._closeHistory();

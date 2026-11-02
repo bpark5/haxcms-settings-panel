@@ -24,8 +24,11 @@
         "analyze": "cem analyze --litelement --exclude public",
         "dddaudit": "hax audit",
         "release": "npm run build && commit-and-tag-version && git push --follow-tags origin main && npm publish",
-        "test": "web-test-runner test/**/*.test.js --coverage --node-resolve",
-        "test:watch": "web-test-runner test/**/*.test.js --node-resolve --watch"
+        "test": "npm run test:node && npm run test:browser",
+        "test:watch": "web-test-runner \"test/**/*.test.js\" --node-resolve --config web-test-runner.config.mjs --watch",
+        "precheck": "node scripts/precheck.mjs",
+        "test:node": "node --test test/*.test.mjs",
+        "test:browser": "web-test-runner \"test/**/*.test.js\" --coverage --node-resolve --config web-test-runner.config.mjs"
     },
     "dependencies": {
         "@haxtheweb/code-editor": "^26.8.0",

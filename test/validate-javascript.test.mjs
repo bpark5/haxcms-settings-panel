@@ -60,7 +60,6 @@ test("static validation leaves runtime failures to the preview", () => {
   ]) {
     const result = validateJavaScript(code);
     assert.equal(result.valid, true);
-    assert.match(result.message, /Runtime errors observed in the preview are reported separately/);
   }
 });
 

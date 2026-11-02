@@ -91,11 +91,11 @@ export class HaxcmsCodeWorkspace extends DDD {
 
   hasUnsavedChanges(language = this.selectedLanguage) {
     const editor = this.querySelector(`code-editor[language="${language}"]`);
-    return (editor?.value ?? "") !== this._savedDrafts[language];
+    return (editor ? editor.value ?? "" : "") !== this._savedDrafts[language];
   }
 
   async loadHistoryRevision(language, revision) {
-    if (!["javascript", "css"].includes(language) || typeof revision?.code !== "string") return false;
+    if (!["javascript", "css"].includes(language) || !revision || typeof revision.code !== "string") return false;
     const editor = this.querySelector(`code-editor[language="${language}"]`);
     if (!editor) return false;
     const current = editor.value ?? "";
@@ -113,7 +113,7 @@ export class HaxcmsCodeWorkspace extends DDD {
     // editorValue trims text and ignores empty strings. Also, typing updates
     // the iframe model without updating monaco-element.value. Reapplying that
     // cached value must explicitly notify the iframe, since Lit sees no change.
-    const monaco = editor.shadowRoot?.querySelector("#codeeditor");
+    const monaco = editor.shadowRoot && editor.shadowRoot.querySelector("#codeeditor");
     if (monaco) {
       if (monaco.value === revision.code) {
         monaco.monacoValueChanged(revision.code);

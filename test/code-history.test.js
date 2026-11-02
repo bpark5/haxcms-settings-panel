@@ -147,13 +147,46 @@ describe("Customization history", () => {
     const old = history._read("js-old");
     history.language = "css";
     await history.updateComplete;
-    await waitUntil(() => !history._loading && history._revisions[0]?.id === "css-empty");
+    await waitUntil(() => !history._loading && history._revisions.length > 0 && history._revisions[0].id === "css-empty");
     resolveOld(new Response(JSON.stringify({ success: true, revision: versions.javascript[0] }), {
       headers: { "Content-Type": "application/json" },
     }));
     await old;
     expect(history._selected).to.equal(null);
     expect(history._revisions[0].id).to.equal("css-empty");
+  });
+
+  it("does not fetch during server-render lifecycle work and refreshes on reconnect", async () => {
+    const history = document.createElement("haxcms-code-history");
+    history.willUpdate(new Map([["language", undefined]]));
+    expect(requests).not.to.include("/mock-code-history");
+    const container = await fixture(html`<div></div>`);
+    container.append(history);
+    await waitUntil(() => !history._loading && history._revisions.length > 0);
+    const before = requests.filter(path => path === "/mock-code-history").length;
+    history.remove();
+    container.append(history);
+    await waitUntil(() => !history._loading && history._revisions.length > 0);
+    expect(requests.filter(path => path === "/mock-code-history").length).to.equal(before + 1);
+  });
+
+  it("ignores a pending history response after disconnect and a newer reconnect response", async () => {
+    const history = await fixture(html`<haxcms-code-history></haxcms-code-history>`);
+    await waitUntil(() => !history._loading && history._revisions.length > 0);
+    const fetch = globalThis.fetch;
+    let resolveOld;
+    globalThis.fetch = () => new Promise(resolve => { resolveOld = resolve; });
+    const pending = history.refresh();
+    const parent = history.parentNode;
+    history.remove();
+    globalThis.fetch = fetch;
+    parent.append(history);
+    await waitUntil(() => !history._loading && history._revisions.length > 0);
+    resolveOld(new Response(JSON.stringify({ success: true, revisions: [] }), {
+      headers: { "Content-Type": "application/json" },
+    }));
+    await pending;
+    expect(history._revisions[0].id).to.equal("js-old");
   });
 
   it("updates the mounted Monaco editor when loading an empty revision", async function () {
@@ -249,7 +282,7 @@ describe("Customization history", () => {
     const history = await openHistory(workspace);
     history._chooseLanguage("css");
     await history.updateComplete;
-    await waitUntil(() => !history._loading && history._revisions[0]?.id === "css-empty");
+    await waitUntil(() => !history._loading && history._revisions.length > 0 && history._revisions[0].id === "css-empty");
     expect(panel.selectedLanguage).to.equal("javascript");
     const css = workspace.querySelector('code-editor[language="css"]');
     css.value = "body { color: purple; }";

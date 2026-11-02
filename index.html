@@ -94,7 +94,7 @@
           }),
         });
 
-        if (!response.headers.get("content-type")?.includes("application/json")) {
+        if (!(response.headers.get("content-type") || "").includes("application/json")) {
           throw new Error(
             `Save endpoint returned HTTP ${response.status} instead of JSON. Restart vercel dev and reload this page.`,
           );

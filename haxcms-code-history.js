@@ -18,24 +18,34 @@ export class HaxcmsCodeHistory extends DDD {
     super();
     this.language = "javascript";
     this._revisions = [];
+    this._selected = null;
     this._loading = false;
     this._error = "";
     this._requestId = 0;
   }
 
-  willUpdate(changed) {
-    super.willUpdate(changed);
-    if (changed.has("language")) this.refresh();
+  connectedCallback() {
+    super.connectedCallback();
+    // Lit does not re-run updated() just because an element reconnects.
+    if (this.hasUpdated) this.refresh();
+  }
+
+  updated(changed) {
+    super.updated(changed);
+    // updated() runs only in the browser, unlike willUpdate() during SSR.
+    if (this.isConnected && changed.has("language")) this.refresh();
   }
 
   disconnectedCallback() {
     this._requestId++;
-    this._controller?.abort();
+    this._loading = false;
+    if (this._controller) this._controller.abort();
     super.disconnectedCallback();
   }
 
   async _read(id = "") {
-    this._controller?.abort();
+    if (!this.isConnected) return;
+    if (this._controller) this._controller.abort();
     const controller = new AbortController();
     this._controller = controller;
     const requestId = ++this._requestId;
@@ -48,7 +58,7 @@ export class HaxcmsCodeHistory extends DDD {
       const response = await fetch(`/mock-code-history${suffix}?language=${encodeURIComponent(language)}`, {
         signal: controller.signal, cache: "no-store",
       });
-      if (!response.headers.get("content-type")?.includes("application/json")) {
+      if (!(response.headers.get("content-type") || "").includes("application/json")) {
         throw new Error("History is available through the local development server. Restart it and try again.");
       }
       const result = await response.json();
@@ -303,7 +313,7 @@ export class HaxcmsCodeHistory extends DDD {
           <ul aria-label=${`${label} saved versions`}>
             ${this._revisions.map((revision, index) => html`
               <li><button type="button" ?disabled=${this._loading}
-                aria-pressed=${this._selected?.id === revision.id ? "true" : "false"}
+                aria-pressed=${this._selected && this._selected.id === revision.id ? "true" : "false"}
                 @click=${() => this._read(revision.id)}>
                 Version ${this._revisions.length - index} · ${new Date(revision.createdAt).toLocaleString()}
                 ${revision.kind === "preserved" ? " · Preserved file" : ""}
