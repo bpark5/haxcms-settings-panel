@@ -1,5 +1,5 @@
 // import { hmrPlugin, presets } from '@open-wc/dev-server-hmr';
-import { writeFile } from 'node:fs/promises';
+import { createMockCodeStore } from './lib/mock-code-store.mjs';
 import { validationDevPlugin } from './lib/validation-dev-plugin.mjs';
 import { previewComponentsDevPlugin } from './lib/preview-components-bundle.mjs';
 import { validateJavaScriptSyntax } from './lib/validate-javascript-syntax.js';
@@ -10,9 +10,10 @@ const customCodeFiles = {
   css: new URL('./mock-site/custom.css', import.meta.url),
 };
 const maxSaveBytes = 1024 * 1024;
+const codeStore = createMockCodeStore();
 
 // Local proof of concept: store text only; do not execute or build it.
-export function createMockSaveCode(writeCode = writeFile) {
+export function createMockSaveCode(saveCode = (language, code) => codeStore.save(language, code)) {
   return async function mockSaveCode(context, next) {
     // Vercel handles /api itself; use a separate path for dev-server middleware.
     if (context.path !== '/mock-save-code') {
@@ -20,6 +21,7 @@ export function createMockSaveCode(writeCode = writeFile) {
     }
 
     context.type = 'application/json';
+    context.set('Cache-Control', 'no-store');
     if (context.method !== 'POST') {
       context.set('Allow', 'POST');
       context.status = 405;
@@ -56,6 +58,7 @@ export function createMockSaveCode(writeCode = writeFile) {
 
     if (
       !payload ||
+      typeof payload.language !== 'string' ||
       !Object.hasOwn(customCodeFiles, payload.language) ||
       typeof payload.code !== 'string'
     ) {
@@ -92,12 +95,42 @@ export function createMockSaveCode(writeCode = writeFile) {
 
     try {
       // Validation precedes all writes. The destination is fixed on the server.
-      await writeCode(customCodeFiles[payload.language], payload.code, 'utf8');
+      const revision = await saveCode(payload.language, payload.code);
       context.status = 200;
-      context.body = { success: true, message: `${payload.language} customization saved.` };
+      context.body = { success: true, revision, message: `${payload.language} customization saved.` };
     } catch {
       context.status = 500;
       context.body = { success: false, message: 'Unable to save customization.' };
+    }
+  };
+}
+
+export function createMockCodeHistory(store = codeStore) {
+  return async (context, next) => {
+    if (context.path !== '/mock-code-history' && !context.path.startsWith('/mock-code-history/')) return next();
+    context.type = 'application/json';
+    context.set('Cache-Control', 'no-store');
+    if (context.method !== 'GET') {
+      context.set('Allow', 'GET');
+      context.status = 405;
+      context.body = { success: false, message: 'Use GET to read history.' };
+      return;
+    }
+    const language = context.query.language;
+    if (typeof language !== 'string' || !Object.hasOwn(customCodeFiles, language)) {
+      context.status = 400;
+      context.body = { success: false, message: 'Choose javascript or css.' };
+      return;
+    }
+    try {
+      const id = context.path.slice('/mock-code-history'.length + 1);
+      context.body = id
+        ? { success: true, language, revision: await store.get(language, id) }
+        : { success: true, language, revisions: await store.list(language) };
+      context.status = 200;
+    } catch (error) {
+      context.status = error.status || 500;
+      context.body = { success: false, message: error.status ? error.message : 'Unable to read local history.' };
     }
   };
 }
@@ -110,7 +143,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   watch: !hmr,
   https: true,
   dedupe: true,
-  middleware: [createMockSaveCode()],
+  middleware: [createMockSaveCode(), createMockCodeHistory()],
   /** Resolve bare module imports */
   nodeResolve: {
     exportConditions: ['browser', 'development'],

@@ -42,7 +42,7 @@ describe("Draft preview and Save validation", () => {
       panel, workspace,
       javascript: workspace.querySelector('code-editor[language="javascript"]'),
       css: workspace.querySelector('code-editor[language="css"]'),
-      save: panel.shadowRoot.querySelector(".action-button"),
+      save: panel.shadowRoot.querySelector(".save-button"),
     };
     await ready(state);
     return state;

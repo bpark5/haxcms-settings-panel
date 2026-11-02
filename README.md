@@ -62,6 +62,57 @@ npx web-test-runner test/code-validation.test.js --node-resolve
 - `npm run test` - Run tests
 - `npm run release` - Build, version bump, and publish
 
+## Local customization history
+
+The separate **History** button in the settings panel's bottom action bar opens
+a modal popup. Its title bar contains the breadcrumb and Close, followed by a
+page header, read-only language/refresh toolbar, saved-version list and source
+detail panel, and a bottom action bar with **Load into editor**. Changing the
+history language does not switch the underlying editor until a version is loaded.
+Escape or Close dismisses the popup and returns focus to History. Choose a
+version to inspect its source as text.
+**Load into editor** replaces only that language's draft, asks before replacing
+unsaved edits, and runs the existing validation/live-preview flow. It never
+saves automatically. Click the normal **Save** button to persist the loaded
+draft as a new version; later versions remain available. Empty versions can be
+loaded to clear a customization. The editor also indicates whether its current
+text matches the last saved file.
+
+The local middleware exposes:
+
+- `GET /mock-code-history?language=javascript` (or `css`) for revision metadata.
+- `GET /mock-code-history/:id?language=javascript` for a revision's source.
+- `POST /mock-save-code` for normal validated saves, now returning revision metadata.
+
+History is a prototype of HAX's Git-backed revision flow. It uses one JSON
+journal per language at `mock-site/history/javascript.json` and `css.json`.
+Each entry records a UUID, timestamp, source, and whether it was a save or a
+preserved file. The first overwrite preserves the existing file, including an
+empty file. Files manually edited outside the panel are preserved on the next
+save too. A preserved timestamp means when it was archived, not when it was
+originally authored. Invalid submissions are not recorded as saved revisions.
+
+Active files and journals use temporary files followed by rename. Requests are
+serialized per language within this dev-server process. If the final journal
+write fails, the handler attempts to restore the previous active file; that
+previous version is archived before the overwrite. This is not a transaction
+across both files, a multi-process lock, or protection against every power-loss
+scenario. History has no retention limit yet. The journals are ignored by Git
+and are not copied into production builds. Existing history before this feature
+cannot be reconstructed from the active files.
+
+Restart the local server after configuration changes. Use `vercel dev` for the
+existing mock password flow (`demo123`). History and saving are local development
+middleware, not real authentication/authorization or production persistence.
+Static hosting can show the preview but does not provide these endpoints.
+
+History checks:
+
+```sh
+node --test test/*.test.mjs
+npx web-test-runner test/code-validation.test.js test/code-history.test.js --node-resolve
+```
+
 ## Working with the component
 
 - `./haxcms-settings-panel.js` - Main settings panel component

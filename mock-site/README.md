@@ -1,5 +1,18 @@
 # Preview fixture
 
+## Saved-version prototype
+
+`custom.js` and `custom.css` remain the active saved files. Successful local saves
+also record revisions in `history/javascript.json` or `history/css.json`.
+The existing content is preserved before its first overwrite. These generated
+journals are ignored by Git; do not commit local history. This simulates the
+list/inspect/restore behavior of HAX's Git history, not Git itself.
+
+Open **History** beside Save to inspect a version in a modal popup. **Load into editor**
+changes the draft and live preview only. The normal Save flow then creates a new
+revision, preserving the intervening versions. The JavaScript and CSS histories
+are independent. A source inspection never executes historical code.
+
 `preview.html` is the initial content for the planned always-visible iframe preview. With the existing development server running, open the demo page to view it beside the editor. Opening the HTML file directly shows the markup without the DDD tokens supplied by the workspace.
 
 This is a representative local page, not a rendering of an actual HAX site. It includes navigation, headings, text, resource cards, and a button for exercising custom CSS and JavaScript. The workspace imports `DDDVariables` from the installed DDD package and embeds them before the fixture stylesheet in the iframe document. There is no separately maintained token copy. DDD font stacks use locally available fallbacks; this fixture does not download web fonts.

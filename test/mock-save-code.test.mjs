@@ -16,22 +16,21 @@ function request(payload, overrides = {}) {
 test("saves each language to its fixed file, including clearing CSS", async () => {
   const writes = [];
   const save = createMockSaveCode(async (...args) => writes.push(args));
-  for (const [language, code, file] of [
-    ["css", ".page-title { color: purple; }", "custom.css"],
-    ["javascript", "console.log('saved');", "custom.js"],
-    ["css", "", "custom.css"],
-    ["javascript", "", "custom.js"],
-    ["javascript", "siteProvidedGlobal();", "custom.js"],
-    ["javascript", "await Promise.resolve();", "custom.js"],
+  for (const [language, code] of [
+    ["css", ".page-title { color: purple; }"],
+    ["javascript", "console.log('saved');"],
+    ["css", ""],
+    ["javascript", ""],
+    ["javascript", "siteProvidedGlobal();"],
+    ["javascript", "await Promise.resolve();"],
   ]) {
     const context = request({ language, code, path: "../../elsewhere" });
     await save(context);
     assert.equal(context.status, 200);
     assert.equal(context.body.success, true);
-    const [destination, text, encoding] = writes.at(-1);
-    assert.ok(destination.pathname.endsWith(`/mock-site/${file}`));
+    const [destinationLanguage, text] = writes.at(-1);
+    assert.equal(destinationLanguage, language);
     assert.equal(text, code);
-    assert.equal(encoding, "utf8");
   }
   assert.equal(writes.length, 6);
 });

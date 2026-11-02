@@ -18,6 +18,8 @@ export class HaxcmsCodeWorkspace extends DDD {
       _previewStale: { state: true },
       _validationMessages: { state: true },
       selectedLanguage: { type: String },
+      _historyNotice: { state: true },
+      _savedDrafts: { state: true },
     };
   }
 
@@ -29,6 +31,8 @@ export class HaxcmsCodeWorkspace extends DDD {
     this._drafts = { javascript: "", css: "" };
     this._editedLanguages = new Set();
     this._previewRun = 0;
+    this._historyNotice = "";
+    this._savedDrafts = { javascript: "", css: "" };
   }
 
   connectedCallback() {
@@ -75,6 +79,51 @@ export class HaxcmsCodeWorkspace extends DDD {
 
   validateJavaScriptDraft() {
     return this.validateDraft("javascript");
+  }
+
+  /** Called with the exact submitted snapshot after persistence succeeds. */
+  markSaved(language, code) {
+    if (language !== "javascript" && language !== "css") return;
+    this._savedDrafts = { ...this._savedDrafts, [language]: code };
+    this._historyNotice = `${language === "css" ? "CSS" : "JavaScript"} saved as a new version.`;
+    this._notifyPreviewState();
+  }
+
+  hasUnsavedChanges(language = this.selectedLanguage) {
+    const editor = this.querySelector(`code-editor[language="${language}"]`);
+    return (editor?.value ?? "") !== this._savedDrafts[language];
+  }
+
+  async loadHistoryRevision(language, revision) {
+    if (!["javascript", "css"].includes(language) || typeof revision?.code !== "string") return false;
+    const editor = this.querySelector(`code-editor[language="${language}"]`);
+    if (!editor) return false;
+    const current = editor.value ?? "";
+    if (current !== revision.code && current !== this._savedDrafts[language] &&
+      !globalThis.confirm("Replace this language's unsaved draft with the selected revision? The saved file will not change until you click Save.")) return false;
+
+    this._editedLanguages.add(language);
+    // Keep the wrapper's backing source aligned too: attribute changes (such
+    // as hidden during language switching) make its observer reload this source.
+    editor.editorValue = revision.code;
+    if (revision.code === "") editor.replaceChildren();
+    editor.value = revision.code;
+    this._scheduleValidation({ composedPath: () => [editor] });
+    await editor.updateComplete;
+    // editorValue trims text and ignores empty strings. Also, typing updates
+    // the iframe model without updating monaco-element.value. Reapplying that
+    // cached value must explicitly notify the iframe, since Lit sees no change.
+    const monaco = editor.shadowRoot?.querySelector("#codeeditor");
+    if (monaco) {
+      if (monaco.value === revision.code) {
+        monaco.monacoValueChanged(revision.code);
+      } else {
+        monaco.value = revision.code;
+      }
+      await monaco.updateComplete;
+    }
+    this._historyNotice = "Version loaded into the editor for validation and live preview. Nothing has been saved.";
+    return true;
   }
 
   _scheduleValidation(event) {
@@ -190,6 +239,7 @@ export class HaxcmsCodeWorkspace extends DDD {
       if (controller.signal.aborted || this._previewController !== controller) return;
 
       this._fixture = { markup, stylesheet, components, url: fixtureUrl.href };
+      this._savedDrafts = { javascript, css };
       // Initialize from saved files, without overwriting typing during loading.
       for (const [language, code] of Object.entries({ javascript, css })) {
         const editor = this.querySelector(`code-editor[language="${language}"]`);
@@ -238,6 +288,8 @@ export class HaxcmsCodeWorkspace extends DDD {
         color: var(--ddd-theme-default-white);
         border-bottom: var(--ddd-border-sm);
       }
+
+      .history-notice { grid-column: 1 / -1; margin: 0; overflow-wrap: anywhere; }
 
       .preview-section {
         border-color: light-dark(var(--ddd-theme-default-slateGray), var(--ddd-theme-default-slateLight));
@@ -366,6 +418,7 @@ export class HaxcmsCodeWorkspace extends DDD {
             </div>
           </div>
         </div>
+        <p class="history-notice" role="status" ?hidden=${!this._historyNotice}>${this._historyNotice}</p>
         <p class = "preview-draft-status" role = "status" ?hidden=${!this._previewStale}>
           Showing the previous preview while the current draft is pending or invalid.
         </p>
