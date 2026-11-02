@@ -134,6 +134,7 @@ export class HaxcmsCodeWorkspace extends DDD {
       this._fixture.url,
       drafts,
       this._previewRun,
+      this._fixture.components,
     );
     this._appliedDrafts = snapshot;
     this._previewStale = false;
@@ -180,15 +181,15 @@ export class HaxcmsCodeWorkspace extends DDD {
 
     try {
       const fixtureUrl = new URL("./mock-site/preview.html", globalThis.document.baseURI);
-      const urls = [fixtureUrl, ...["preview.css", "custom.js", "custom.css"].map(name => new URL(name, fixtureUrl))];
-      const [markup, stylesheet, javascript, css] = await Promise.all(urls.map(async (url) => {
+      const urls = [fixtureUrl, ...["preview.css", "custom.js", "custom.css", "preview-components.js"].map(name => new URL(name, fixtureUrl))];
+      const [markup, stylesheet, javascript, css, components] = await Promise.all(urls.map(async (url) => {
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
         if (!response.ok) throw new Error(`Preview asset returned HTTP ${response.status}.`);
         return response.text();
       }));
       if (controller.signal.aborted || this._previewController !== controller) return;
 
-      this._fixture = { markup, stylesheet, url: fixtureUrl.href };
+      this._fixture = { markup, stylesheet, components, url: fixtureUrl.href };
       // Initialize from saved files, without overwriting typing during loading.
       for (const [language, code] of Object.entries({ javascript, css })) {
         const editor = this.querySelector(`code-editor[language="${language}"]`);
@@ -233,7 +234,46 @@ export class HaxcmsCodeWorkspace extends DDD {
 
       .heading {
         padding: var(--ddd-spacing-3) var(--ddd-spacing-4);
+        background: var(--ddd-theme-default-black);
+        color: var(--ddd-theme-default-white);
         border-bottom: var(--ddd-border-sm);
+      }
+
+      .preview-section {
+        border-color: light-dark(var(--ddd-theme-default-slateGray), var(--ddd-theme-default-slateLight));
+        background: light-dark(var(--ddd-theme-default-slateMaxLight), var(--ddd-theme-default-slateGray));
+      }
+
+      .preview-canvas {
+        padding: var(--ddd-spacing-4);
+      }
+
+      .preview-window {
+        border: var(--ddd-border-xs);
+        border-radius: var(--ddd-radius-sm);
+        overflow: hidden;
+        box-shadow: var(--ddd-boxShadow-sm);
+      }
+
+      .preview-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ddd-spacing-2);
+        padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
+        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-nittanyNavy));
+        color: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
+        border-bottom: var(--ddd-border-xs);
+        font-family: var(--ddd-font-navigation);
+        font-size: var(--ddd-font-size-5xs);
+      }
+
+      .preview-badge {
+        padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
+        border-radius: var(--ddd-radius-xs);
+        background: light-dark(var(--ddd-theme-default-slateLight), var(--ddd-theme-default-slateGray));
+        font-weight: var(--ddd-font-weight-bold);
       }
 
       .validation-status, .preview-draft-status, .preview-runtime-status {
@@ -241,12 +281,13 @@ export class HaxcmsCodeWorkspace extends DDD {
         margin: 0;
         padding: var(--ddd-spacing-3);
         overflow-wrap: anywhere;
+        font-size: var(--ddd-font-size-3xs)
       }
 
       .editor-title, .preview-title {
         margin: 0;
         font-family: var(--ddd-font-navigation);
-        font-size: var(--ddd-font-size-4xs);
+        font-size: var(--ddd-font-size-2xs);
         font-weight: var(--ddd-font-weight-bold);
         line-height: var(--ddd-lh-150);
       }
@@ -254,7 +295,7 @@ export class HaxcmsCodeWorkspace extends DDD {
       .editor-description, .preview-description {
         margin: var(--ddd-spacing-1) 0 0;
         font-family: var(--ddd-font-primary);
-        font-size: var(--ddd-font-size-5xs);
+        font-size: var(--ddd-font-size-4xs);
         line-height: var(--ddd-lh-150);
       }
 
@@ -310,12 +351,20 @@ export class HaxcmsCodeWorkspace extends DDD {
               ${this._previewError || "Loading sample site…"}
             </p>
           </div>
-          ${keyed(this._previewRun, html`<iframe
-            class = "preview-frame"
-            title = "Sample Learning studio site preview"
-            srcdoc = ${this._previewDocument || ""}
-            sandbox = "allow-scripts"
-          ></iframe>`)}
+          <div class = "preview-canvas">
+            <div class = "preview-window">
+              <div class = "preview-toolbar">
+                <span class = "preview-site-label">Learning studio · Sample site</span>
+                <span class = "preview-badge">Live preview</span>
+              </div>
+              ${keyed(this._previewRun, html`<iframe
+                class = "preview-frame"
+                title = "Sample Learning studio site preview"
+                srcdoc = ${this._previewDocument || ""}
+                sandbox = "allow-scripts"
+              ></iframe>`)}
+            </div>
+          </div>
         </div>
         <p class = "preview-draft-status" role = "status" ?hidden=${!this._previewStale}>
           Showing the previous preview while the current draft is pending or invalid.

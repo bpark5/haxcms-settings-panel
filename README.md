@@ -29,8 +29,15 @@ emitting `save-request`, so changes made during authentication are checked too.
 CSS is parsed separately with CSSTree after the same 750 ms pause. Recovered
 parse errors and unclosed blocks are reported with line and column locations.
 CSS property/value compatibility and safety are not checked. Both languages are
-rechecked before saving. CSS is not validated by Acorn. The check uses classic-script syntax; imports and
-exports are not supported. A passing check does not guarantee runtime safety,
+rechecked before saving. CSS is not validated by Acorn. JavaScript is parsed and
+executed as an ES module to match HAX's custom module loader. Static imports,
+dynamic `import()`, and all exports are explicitly rejected, including imports
+inside functions. This is a source-code restriction, not a security boundary or
+a guarantee against other forms of resource loading. Modules use strict mode;
+top-level `this` is `undefined`, and top-level declarations do not become
+properties of `window`. Use `window` or `globalThis` explicitly when sharing a
+value with other code. Top-level `await` is supported by this prototype.
+A passing check does not guarantee runtime safety,
 detect infinite loops, or prove that code will work on the site. The sample
 iframe starts from saved customizations, then automatically applies valid editor
 drafts after the validation pause. Invalid drafts leave the previous preview
@@ -82,16 +89,24 @@ A brighter future dreamed and developed by the Penn State [HAXTheWeb](https://ha
 
 ## Saving customizations locally
 
+The preview now includes real `ddd-card` components. Draft JavaScript waits for
+their registration and initial rendering inside each isolated iframe. Customize
+`#learn-card` or `#practice-card` using component properties and supported styling
+hooks, such as `#learn-card::part(title)`. Restart the development server to enable
+the local component bundle endpoint. This is still a fixture, not a full HAX site.
+
 Save is disabled while the current draft preview is pending or has reported a
 runtime error. Both language tabs share this preview gate because JavaScript and
 CSS run together. A corrected draft must run in a fresh iframe before Save is
 enabled again. The gate is rechecked after authentication. Preview readiness
-means initial execution completed with no errors observed so far; errors from
+means module evaluation (including top-level `await`) completed with no errors
+observed so far; errors from
 later timers or interactions can still arrive and disable Save. The backend does
 syntax validation only and does not execute submitted code.
 
-The mock save handler independently validates JavaScript with Acorn (classic
-scripts) and CSS with CSSTree before calling the file writer. Invalid syntax
+The mock save handler independently validates JavaScript with Acorn using the
+same module syntax and import/export restrictions as the editor, and CSS with
+CSSTree before calling the file writer. Invalid syntax or unsupported imports/exports
 returns HTTP 422 with a message and one-based line/column, leaving the saved files
 untouched. Unexpected validation failures return HTTP 500 without writing.
 Undefined JavaScript globals are not rejected by this backend syntax check.

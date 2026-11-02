@@ -22,6 +22,7 @@ test("saves each language to its fixed file, including clearing CSS", async () =
     ["css", "", "custom.css"],
     ["javascript", "", "custom.js"],
     ["javascript", "siteProvidedGlobal();", "custom.js"],
+    ["javascript", "await Promise.resolve();", "custom.js"],
   ]) {
     const context = request({ language, code, path: "../../elsewhere" });
     await save(context);
@@ -32,7 +33,7 @@ test("saves each language to its fixed file, including clearing CSS", async () =
     assert.equal(text, code);
     assert.equal(encoding, "utf8");
   }
-  assert.equal(writes.length, 5);
+  assert.equal(writes.length, 6);
 });
 
 test("rejects invalid syntax before writing either saved file", async () => {
@@ -41,6 +42,9 @@ test("rejects invalid syntax before writing either saved file", async () => {
   for (const [language, code] of [
     ["javascript", "const broken = ;"],
     ["javascript", "import x from './x.js';"],
+    ["javascript", "export default 1;"],
+    ["javascript", "function later() { return import('./x.js'); }"],
+    ["javascript", "with (window) {}"],
     ["css", ".page-title { color red; }"],
     ["css", ".page-title { color: red;"],
   ]) {

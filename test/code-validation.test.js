@@ -138,9 +138,66 @@ describe("Draft preview and Save validation", () => {
     expect(state.panel._validateCodeForSave()).to.equal(true);
   });
 
+  it("executes drafts with strict mode and module-local declarations", async () => {
+    const state = await setup();
+    edit(state, "javascript", `
+      var draftLocal = 1;
+      function draftFunction() {}
+      if (this !== undefined) throw new Error('Expected module-level this');
+      if ('draftLocal' in window || 'draftFunction' in window) {
+        throw new Error('Module declarations leaked onto window');
+      }
+      if (draftLocal !== 1) throw new Error('Module declaration is unavailable');
+    `);
+    await ready(state);
+    expect(state.workspace._runtimeError || "").to.equal("");
+    expect(state.save.disabled).to.equal(false);
+  });
+
+  it("keeps Save disabled until top-level await finishes", async () => {
+    const state = await setup();
+    let started = false;
+    let finished = false;
+    const listener = event => {
+      const frame = state.workspace.shadowRoot.querySelector("iframe");
+      if (event.source !== frame.contentWindow) return;
+      if (event.data.type === "module-started") started = true;
+      if (event.data.type === "module-finished") finished = true;
+    };
+    globalThis.addEventListener("message", listener);
+    try {
+      edit(state, "javascript", `
+        parent.postMessage({ type: 'module-started' }, '*');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        parent.postMessage({ type: 'module-finished' }, '*');
+      `);
+      await waitUntil(() => started, "Module should start", { timeout: 5000 });
+      expect(state.workspace.canSavePreview).to.equal(false);
+      await state.panel.updateComplete;
+      expect(state.save.disabled).to.equal(true);
+      await ready(state);
+      expect(finished).to.equal(true);
+      expect(state.save.disabled).to.equal(false);
+    } finally {
+      globalThis.removeEventListener("message", listener);
+    }
+  });
+
+  for (const invalid of ["import './other.js';", "export default 1;", "function later() { return import('./other.js'); }"]) {
+    it(`preserves the preview and blocks unsupported module syntax: ${invalid}`, async () => {
+      const state = await setup();
+      const oldFrame = state.workspace.shadowRoot.querySelector("iframe");
+      edit(state, "javascript", invalid);
+      await waitUntil(() => (state.workspace._validationMessages.javascript || "").includes("Imports and exports are not supported"));
+      expect(state.workspace.shadowRoot.querySelector("iframe")).to.equal(oldFrame);
+      expect(state.panel._validateCodeForSave()).to.equal(false);
+    });
+  }
+
   for (const code of [
     "throw new Error('immediate failure');",
     "Promise.reject(new Error('immediate failure'));",
+    "await Promise.reject(new Error('immediate failure'));",
   ]) {
     it(`blocks Save for an observed error: ${code}`, async () => {
       const state = await setup();

@@ -1,6 +1,7 @@
 // import { hmrPlugin, presets } from '@open-wc/dev-server-hmr';
 import { writeFile } from 'node:fs/promises';
 import { validationDevPlugin } from './lib/validation-dev-plugin.mjs';
+import { previewComponentsDevPlugin } from './lib/preview-components-bundle.mjs';
 import { validateJavaScriptSyntax } from './lib/validate-javascript-syntax.js';
 import { validateCSS } from './lib/validate-css.js';
 
@@ -123,6 +124,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
 
   plugins: [
     validationDevPlugin(),
+    previewComponentsDevPlugin(),
     /** Use Hot Module Replacement by uncommenting. Requires @open-wc/dev-server-hmr plugin */
     // hmr && hmrPlugin({ exclude: ['**/*/node_modules/**/*'], presets: [presets.litElement] }),
   ],

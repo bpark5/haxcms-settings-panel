@@ -6,6 +6,7 @@ import esbuild from 'rollup-plugin-esbuild';
 import copy from 'rollup-plugin-copy';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import { bundlePreviewComponents } from './lib/preview-components-bundle.mjs';
 
 export default {
   input: 'index.html',
@@ -19,6 +20,16 @@ export default {
   preserveEntrySignatures: false,
 
   plugins: [
+    {
+      name: 'preview-components-bundle',
+      async generateBundle() {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'mock-site/preview-components.js',
+          source: await bundlePreviewComponents(),
+        });
+      },
+    },
     html({
       minify: true,
     }),
@@ -51,6 +62,10 @@ export default {
     }),
     copy({
       targets: [
+        {
+          src: 'node_modules/@haxtheweb/d-d-d/locales/ddd-card.es.json',
+          dest: 'public/locales',
+        },
         {
           src: ['mock-site/preview.html', 'mock-site/preview.css', 'mock-site/custom.js', 'mock-site/custom.css'],
           dest: 'public/mock-site',
