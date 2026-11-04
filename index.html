@@ -8,22 +8,12 @@
   <meta name="Description" content="Demonstration for haxcms-settings-panel">
 
   <style>
-    :root, html, body {
-      margin: var(--ddd-spacing-0);
-      padding: var(--ddd-spacing-0);
-    }
-    #demo {
-      margin: var(--ddd-spacing-2);
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--ddd-theme-default-potentialMidnight, #000321);
     }
 
-    haxcms-settings-panel:hover {
-      box-shadow: var(--ddd-boxShadow-sm);
-    }
-    #example {
-      --haxcms-settings-panel-font-size: var(--ddd-font-size-l);
-      background-color: var(--ddd-accent-2);
-      color: var(--ddd-primary-17);
-    }
     code-editor[hidden] {
       display: none !important;
     }
@@ -37,7 +27,7 @@
     id = "settings-panel"
     title="JS/CSS" 
     breadcrumbs='[
-    {"icon": "settings", "label": "Settings", "screen": "settings"},
+    {"icon": "settings", "label": "System Settings", "screen": "settings"},
     {"icon": "code", "label": "JS/CSS", "screen": "code"}
     ]'
     description="Insert your own JavaScript or CSS file to make your HAX site more customizable."

@@ -8,7 +8,7 @@ The existing content is preserved before its first overwrite. These generated
 journals are ignored by Git; do not commit local history. This simulates the
 list/inspect/restore behavior of HAX's Git history, not Git itself.
 
-Open **History** beside Save to inspect a version in a modal popup. **Load into editor**
+Open **History** from the toolbar or navigation rail to inspect a version in a modal popup. **Load into editor**
 changes the draft and live preview only. The normal Save flow then creates a new
 revision, preserving the intervening versions. The JavaScript and CSS histories
 are independent. A source inspection never executes historical code.

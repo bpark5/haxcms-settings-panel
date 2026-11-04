@@ -96,7 +96,7 @@ describe("Customization history", () => {
     expect(workspace._historyNotice).to.include("Nothing has been saved");
     const panel = workspace.closest("haxcms-settings-panel");
     await panel.updateComplete;
-    expect(panel.shadowRoot.querySelector(".draft-status").textContent).to.include("Unsaved changes");
+    expect(panel.shadowRoot.querySelector(".draft-status").textContent).to.include("1 unsaved change");
     expect(panel.shadowRoot.querySelector(".history-dialog").open).to.equal(false);
     expect(requests).not.to.include("/mock-save-code");
   });
@@ -132,7 +132,7 @@ describe("Customization history", () => {
     expect(workspace._savedDrafts.javascript).to.equal("// older submitted draft");
     const panel = workspace.closest("haxcms-settings-panel");
     await panel.updateComplete;
-    expect(panel.shadowRoot.querySelector(".draft-status").textContent).to.include("Unsaved changes");
+    expect(panel.shadowRoot.querySelector(".draft-status").textContent).to.include("1 unsaved change");
   });
 
   it("ignores history responses from the previous language", async () => {
@@ -297,4 +297,38 @@ describe("Customization history", () => {
     expect(panel.shadowRoot.querySelector(".history-dialog").open).to.equal(false);
     expect(requests).not.to.include("/mock-save-code");
   });
+
+  for (const language of ["javascript", "css"]) {
+    it(`discards only the selected ${language} draft in the visible Monaco editor without saving`, async function () {
+      this.timeout(20000);
+      await import("@haxtheweb/code-editor/code-editor.js");
+      const workspace = await setup();
+      const panel = workspace.closest("haxcms-settings-panel");
+      panel._setLanguage(language);
+      workspace.selectedLanguage = language;
+      const editor = workspace.querySelector(`code-editor[language="${language}"]`);
+      await waitUntil(() => editor.ready, "Monaco should initialize", { timeout: 15000 });
+      const model = editor.shadowRoot.querySelector("#codeeditor").iframe.contentWindow.monaco.editor.getModels()[0];
+      const saved = language === "javascript" ? "// saved JavaScript" : "body { color: purple; }";
+      editor.editorValue = saved;
+      await waitUntil(() => model.getValue() === saved && editor.value === saved);
+      workspace.markSaved(language, saved);
+      const otherLanguage = language === "javascript" ? "css" : "javascript";
+      const other = workspace.querySelector(`code-editor[language="${otherLanguage}"]`);
+      other.value = "/* keep this other draft */";
+      other.dispatchEvent(new CustomEvent("value-changed"));
+      model.setValue(language === "javascript" ? "// unsaved JavaScript" : "body { color: red; }");
+      await waitUntil(() => workspace.hasUnsavedChanges(language));
+      await waitUntil(() => workspace.canSavePreview, "Draft preview should settle", { timeout: 5000 });
+      await panel.updateComplete;
+      expect(panel.shadowRoot.querySelector(".save-button").disabled).to.equal(false);
+      panel.shadowRoot.querySelector(".discard-button").click();
+      await waitUntil(() => model.getValue() === saved && !workspace.hasUnsavedChanges(language));
+      await panel.updateComplete;
+      expect(other.value).to.equal("/* keep this other draft */");
+      expect(panel.shadowRoot.querySelector(".save-button").disabled).to.equal(true);
+      expect(panel.shadowRoot.querySelector(".discard-button").disabled).to.equal(true);
+      expect(requests).not.to.include("/mock-save-code");
+    });
+  }
 });
