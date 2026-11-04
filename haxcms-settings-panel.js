@@ -30,6 +30,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     this.panelVisible = true;
     this.selectedLanguage = "javascript";
     this._validationState = {};
+    this._menuCollapsed = false;
     this._historyOpen = false;
     this._historyLanguage = "javascript";
     this.addEventListener("code-validation", this._handleCodeValidation);
@@ -48,6 +49,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       selectedLanguage: { type: String },
       _validationState: { state: true },
       _previewSaveState: { state: true },
+      _menuCollapsed: { state: true },
       _historyOpen: { state: true },
       _historyLanguage: { state: true }
     };
@@ -58,181 +60,392 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     return [super.styles,
     css`
       :host {
+        --panel-surface: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
+        --panel-rail: light-dark(var(--ddd-theme-default-limestoneMaxLight), color-mix(in srgb, var(--ddd-theme-default-coalyGray) 80%, var(--ddd-theme-default-black)));
+        --panel-text: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
+        --panel-muted: light-dark(var(--ddd-theme-default-slateGray), var(--ddd-theme-default-limestoneGray));
+        --panel-line: light-dark(var(--ddd-theme-default-limestoneLight), color-mix(in srgb, var(--ddd-theme-default-white) 18%, transparent));
+        --panel-selected: color-mix(in srgb, var(--ddd-theme-default-skyBlue) 16%, var(--panel-surface));
         display: block;
-        margin: var(--ddd-spacing-4);
+        height: calc(100dvh - var(--ddd-spacing-12));
+        min-height: 520px;
+        margin: var(--ddd-spacing-6);
+        color: var(--panel-text);
+        font-family: var(--ddd-font-navigation);
+        font-size: var(--ddd-font-size-4xs);
+        color-scheme: light dark;
       }
 
       :host(:not([panelvisible])) {
         display: none;
       }
 
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: default;
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--ddd-theme-default-keystoneYellow);
+        outline-offset: 3px;
+      }
+
+      simple-icon-lite {
+        --simple-icon-width: var(--ddd-icon-xs, 24px);
+        --simple-icon-height: var(--ddd-icon-xs, 24px);
+        --simple-icon-color: currentColor;
+        flex: none;
+      }
+
+      .panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        height: 100%;
+        overflow: hidden;
+        border-radius: var(--ddd-radius-md);
+        background: var(--panel-surface);
+        box-shadow: var(--ddd-boxShadow-lg);
+      }
+
       .panel-titlebar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: var(--ddd-spacing-3);
-        background: var(--ddd-theme-default-black);
-        margin-bottom: var(--ddd-spacing-0);
-        position: sticky;
-        top: var(--ddd-spacing-0);
-        z-index: 1;
+        gap: var(--ddd-spacing-4);
+        min-height: var(--ddd-spacing-16);
+        padding: var(--ddd-spacing-3) var(--ddd-spacing-6);
+        background: var(--ddd-theme-default-potentialMidnight);
+        color: var(--ddd-theme-default-white);
       }
 
       .breadcrumbs {
-        font-family: var(--ddd-font-navigation);
-        font-size: var(--ddd-font-size-m);
-        font-weight: var(--ddd-font-weight-bold);
-        color: var(--ddd-theme-default-white);
         display: flex;
         align-items: center;
+        gap: var(--ddd-spacing-4);
+        min-width: 0;
+        font-weight: var(--ddd-font-weight-bold);
       }
 
       .breadcrumb-button, .breadcrumb-current {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: var(--ddd-spacing-1);
+        gap: var(--ddd-spacing-2);
         font: inherit;
         color: inherit;
       }
 
       .breadcrumb-button {
+        border: 0;
+        padding: 0;
         background: transparent;
-        border: none;
-        padding: var(--ddd-spacing-0);
-        cursor: pointer;
       }
 
-      .breadcrumb-button:hover .breadcrumb-text, .breadcrumb-button:focus-visible .breadcrumb-text {
+      .breadcrumb-button:hover {
         text-decoration: underline;
       }
 
-      .breadcrumb-button:focus-visible {
-        outline: 2px solid var(--ddd-theme-default-skyBlue);
-        outline-offset: 3px;
-        border-radius: var(--ddd-radius-xs);
+      .breadcrumb-current {
+        overflow: hidden;
       }
 
-      .breadcrumb-icon {
-        --simple-icon-width: var(--ddd-font-size-m);
-        --simple-icon-height: var(--ddd-font-size-m);
+      .breadcrumb-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .breadcrumb-separator {
-        display: inline-flex;
-        align-items: center;
-        margin: var(--ddd-spacing-0) var(--ddd-spacing-2);
+        color: var(--ddd-theme-default-limestoneGray);
       }
 
       .close-button {
+        display: grid;
+        place-items: center;
         width: var(--ddd-spacing-10);
         height: var(--ddd-spacing-10);
-        cursor: pointer;
-        border: none;
+        border: 0;
+        color: inherit;
         background: transparent;
-        color: var(--ddd-theme-default-white);
-        border-radius: var(--ddd-radius-circle);
+        border-radius: var(--ddd-radius-xs);
       }
 
       .close-button simple-icon-lite {
-        --simple-icon-width: var(--ddd-font-size-l);
-        --simple-icon-height: var(--ddd-font-size-l);
-        --simple-icon-color: currentColor;
+        --simple-icon-width: var(--ddd-icon-lg, 24px);
+        --simple-icon-height: var(--ddd-icon-lg, 24px);
       }
 
-      .close-button:hover simple-icon-lite {
-        --simple-icon-color: var(--ddd-theme-default-skyBlue);
+      .close-button:hover {
+        background: color-mix(in srgb, currentColor 12%, transparent);
+        color: var(--ddd-theme-skyBlue)
       }
 
-      .close-button:focus-visible {
-        outline: none;
-        border: none;
+      .panel-layout {
+        display: grid;
+        grid-template-columns: 216px minmax(0, 1fr);
+        min-height: 0;
       }
 
-      .close-button:focus-visible simple-icon-lite {
-        outline: 2px solid var(--ddd-theme-default-skyBlue);
-        outline-offset: 2px;
-        border-radius: var(--ddd-radius-circle);
-        --simple-icon-color: var(--ddd-theme-default-skyBlue);
+      .panel-layout.collapsed {
+        grid-template-columns: 68px minmax(0, 1fr);
       }
 
-      .panel-shell {
-        margin-top: var(--ddd-spacing-0);
-        padding-top: var(--ddd-spacing-0);
-        background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
+      .section-rail {
+        background: var(--panel-rail);
+        border-right: 1px solid var(--panel-line);
+        padding: var(--ddd-spacing-4) var(--ddd-spacing-3);
+        overflow-y: auto;
       }
 
-      .panel-header {
-        padding: var(--ddd-spacing-4);
-      }
-
-      .panel-title-wrapper {
+      .rail-button {
         display: flex;
         align-items: center;
-        gap: var(--ddd-spacing-2);
+        gap: var(--ddd-spacing-3);
+        width: 100%;
+        min-height: var(--ddd-spacing-11);
+        padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
+        border: 0;
+        border-radius: var(--ddd-radius-xs);
+        background: transparent;
+        color: var(--panel-text);
+        text-align: left;
+        white-space: nowrap;
       }
 
-      .panel-title-icon {
-        --simple-icon-width: var(--ddd-font-size-l);
-        --simple-icon-height: var(--ddd-font-size-l);
+      .rail-button:hover {
+        background: color-mix(in srgb, var(--panel-text) 6%, transparent);
       }
 
-      .panel-title {
-        margin: var(--ddd-spacing-0);
-        font-family: var(--ddd-font-primary);
-        font-size: var(--ddd-font-size-m);
+      .collapse-button {
+        color: var(--panel-muted);
+        font-size: var(--ddd-font-size-5xs);
+        margin-bottom: var(--ddd-spacing-6);
+      }
+
+      .rail-label {
+        color: var(--panel-muted);
+        font-size: var(--ddd-font-size-6xs);
+        font-weight: var(--ddd-font-weight-bold);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin: 0 var(--ddd-spacing-3) var(--ddd-spacing-2);
+      }
+
+      .rail-button[aria-current="page"] {
+        background: var(--panel-selected);
+        box-shadow: inset 4px 0 var(--ddd-theme-default-skyBlue);
         font-weight: var(--ddd-font-weight-bold);
       }
 
-      .panel-description {
-        margin: var(--ddd-spacing-0);
-        padding-top: var(--ddd-spacing-1);
-        font-family: var(--ddd-font-primary);
-        font-size: var(--ddd-font-size-3xs);
-        color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+      .rail-button .change-dot {
+        margin-left: auto;
+      }
 
+      .collapsed .rail-text, .collapsed .rail-label {
+        display: none;
+      }
+
+      .collapsed .section-rail {
+        padding-inline: var(--ddd-spacing-2);
+      }
+
+      .collapsed .rail-button {
+        justify-content: center;
+        padding-inline: var(--ddd-spacing-2);
+      }
+
+      .collapsed .rail-button .change-dot {
+        position: absolute;
+        margin-left: var(--ddd-spacing-7);
+        margin-top: calc(-1 * var(--ddd-spacing-5));
+      }
+
+      .panel-shell {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        min-width: 0;
+        min-height: 0;
+      }
+
+      .panel-header {
+        padding: var(--ddd-spacing-5) var(--ddd-spacing-6);
+        border-bottom: 1px solid var(--panel-line);
+      }
+
+      .panel-title {
+        margin: 0;
+        font-size: var(--ddd-font-size-s);
+        font-weight: var(--ddd-font-weight-bold);
+        line-height: var(--ddd-lh-120);
+      }
+
+      .panel-description {
+        margin-top: var(--ddd-spacing-2);
+        color: var(--panel-muted);
+        line-height: var(--ddd-lh-150);
+      }
+
+      .editor-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ddd-spacing-4);
+        flex-wrap: wrap;
+        padding: var(--ddd-spacing-4) var(--ddd-spacing-6);
+      }
+
+      .language-toggle {
+        display: inline-flex;
+        border: 1px solid var(--panel-muted);
+        border-radius: var(--ddd-radius-xs);
+        overflow: hidden;
+      }
+
+      .language-toggle button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--ddd-spacing-2);
+        min-height: var(--ddd-spacing-10);
+        padding: var(--ddd-spacing-2) var(--ddd-spacing-4);
+        border: 0;
+        border-right: 1px solid var(--panel-muted);
+        background: transparent;
+        color: var(--panel-text);
+      }
+
+      .language-toggle button:last-child {
+        border-right: 0;
+      }
+
+      .language-toggle button.active {
+        background: var(--panel-selected);
+        font-weight: var(--ddd-font-weight-bold);
+      }
+
+      .language-toggle button:hover {
+        background: var(--panel-selected);
+      }
+
+      .language-toggle button:focus-visible {
+        outline-offset: -3px;
+      }
+
+      .history-button {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--ddd-spacing-2);
+        min-height: var(--ddd-spacing-10);
+        padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
+        border: 1px solid var(--panel-muted);
+        border-radius: var(--ddd-radius-xs);
+        background: transparent;
+        color: var(--panel-text);
+      }
+
+      .history-button:hover {
+        background: var(--panel-selected);
       }
 
       .panel-content {
-        padding-right: var(--ddd-spacing-4);
-        padding-left: var(--ddd-spacing-4);
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0 var(--ddd-spacing-6) var(--ddd-spacing-5);
       }
 
       .panel-actions {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
-        padding: var(--ddd-spacing-4);
-        margin-top: var(--ddd-spacing-0);
         gap: var(--ddd-spacing-3);
         flex-wrap: wrap;
+        padding: var(--ddd-spacing-4) var(--ddd-spacing-6);
+        border-top: 1px solid var(--panel-line);
+        background: var(--panel-surface);
       }
 
       .draft-status {
+        display: flex;
+        align-items: center;
+        gap: var(--ddd-spacing-2);
         margin-right: auto;
-        font-family: var(--ddd-font-primary);
-        font-size: var(--ddd-font-size-3xs);
+        color: var(--panel-muted);
       }
 
-      .history-button {
-        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
-        color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+      .draft-status strong {
+        color: var(--panel-text);
+        font-weight: var(--ddd-font-weight-bold);
+      }
+
+      .change-dot {
+        display: inline-block;
+        flex: none;
+        width: var(--ddd-spacing-2);
+        height: var(--ddd-spacing-2);
+        border-radius: var(--ddd-radius-circle);
+        background: var(--ddd-theme-default-skyBlue);
+      }
+
+      .action-button {
+        min-height: var(--ddd-spacing-10);
+        min-width: var(--ddd-spacing-24);
+        padding: var(--ddd-spacing-2) var(--ddd-spacing-5);
+        font-weight: var(--ddd-font-weight-bold);
+        border-radius: var(--ddd-radius-xs);
+      }
+
+      .discard-button {
+        border: 1px solid transparent;
+        color: var(--panel-text);
+        background: transparent;
+      }
+
+      .save-button {
+        border: 1px solid var(--panel-muted);
+        color: var(--panel-text);
+        background: transparent;
+      }
+
+      .save-button.has-changes {
+        background: var(--ddd-theme-default-skyLight);
+        color: var(--ddd-theme-default-potentialMidnight);
+        border-color: var(--ddd-theme-default-skyLight);
+      }
+
+      .action-button:disabled {
+        color: var(--panel-muted);
+        background: transparent;
+        border-color: var(--panel-line);
+      }
+
+      .discard-button:disabled {
+        border-color: transparent;
+      }
+
+      .action-button:not(:disabled):hover {
+        filter: brightness(1.12);
       }
 
       .history-dialog {
-        padding: var(--ddd-spacing-0);
-        width: min(1100px, calc(100vw - var(--ddd-spacing-8)));
+        padding: 0;
+        width: min(1100px, calc(100vw - var(--ddd-spacing-12)));
         max-width: none;
-        max-height: calc(100dvh - var(--ddd-spacing-8));
-        border: var(--ddd-border-sm);
-        border-radius: var(--ddd-radius-sm);
+        max-height: calc(100dvh - var(--ddd-spacing-12));
+        border: 1px solid var(--panel-line);
+        border-radius: var(--ddd-radius-md);
+        background: var(--panel-surface);
+        color: var(--panel-text);
         box-shadow: var(--ddd-boxShadow-lg);
-        background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
-        color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
       }
 
       .history-dialog::backdrop {
-        background: rgba(0, 0, 0, 0.65);
+        background: color-mix(in srgb, var(--ddd-theme-default-potentialMidnight) 80%, transparent);
       }
 
       .history-titlebar {
@@ -240,359 +453,217 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         align-items: center;
         justify-content: space-between;
         gap: var(--ddd-spacing-3);
-        padding: var(--ddd-spacing-3);
-        background: var(--ddd-theme-default-black);
+        padding: var(--ddd-spacing-3) var(--ddd-spacing-5);
+        background: var(--ddd-theme-default-potentialMidnight);
         color: var(--ddd-theme-default-white);
-        font-family: var(--ddd-font-navigation);
       }
 
       .history-titlebar p {
-        margin: var(--ddd-spacing-0);
-        font-size: var(--ddd-font-size-3xs);
+        margin: 0;
+        font-weight: var(--ddd-font-weight-bold);
+      }
+
+      @media (max-width: 900px) {
+        :host {
+          margin: var(--ddd-spacing-3);
+          height: calc(100dvh - var(--ddd-spacing-6));
+        }
+
+        .panel-layout {
+          grid-template-columns: 176px minmax(0, 1fr);
+        }
+
+        .panel-titlebar, .panel-header, .editor-controls, .panel-actions {
+          padding-inline: var(--ddd-spacing-4);
+        }
+
+        .panel-content {
+          padding-inline: var(--ddd-spacing-4);
+        }
       }
 
       @media (max-width: 600px) {
+        :host {
+          margin: 0;
+          height: 100dvh;
+          min-height: 440px;
+        }
+
+        .panel {
+          border-radius: 0;
+        }
+
+        .panel-layout, .panel-layout.collapsed {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .section-rail {
+          display: none;
+        }
+
+        .panel-titlebar {
+          min-height: var(--ddd-spacing-14);
+          gap: var(--ddd-spacing-2);
+        }
+
+        .breadcrumbs {
+          gap: var(--ddd-spacing-2);
+          font-size: var(--ddd-font-size-5xs);
+        }
+
+        .panel-header {
+          padding-block: var(--ddd-spacing-4);
+        }
+
+        .draft-status {
+          flex-basis: 100%;
+          font-size: var(--ddd-font-size-5xs);
+        }
+
+        .panel-actions {
+          justify-content: flex-end;
+          gap: var(--ddd-spacing-2);
+          padding-block: var(--ddd-spacing-3);
+        }
+
         .history-dialog {
           width: calc(100vw - var(--ddd-spacing-4));
           max-height: calc(100dvh - var(--ddd-spacing-4));
         }
       }
-
-      .editor-controls {
-        display: flex;
-        justify-content: flex-end;
-        padding-right: var(--ddd-spacing-4);
-        border: none;
-      }
-
-      .language-toggle {
-        display: inline-flex;
-        overflow: hidden;
-        border-radius: var(--ddd-radius-sm);
-        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
-      }
-
-      .language-toggle button {
-        border: none;
-        padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
-        font-family: var(--ddd-font-navigation);
-        font-size: var(--ddd-font-size-4xs);
-        background: transparent;
-        color: light-dark(var(--ddd-theme-default-black),var(--ddd-theme-default-white));
-        opacity: 0.55;
-        cursor: pointer;
-      }
-
-      .language-toggle button.active {
-        background: var(--ddd-theme-default-skyBlue);
-        color: var(--ddd-theme-default-white);
-        opacity: 1;
-      }
-
-      .language-toggle button:hover, .language-toggle button:focus-visible {
-        opacity: 0.8;
-      }
-
-      .language-toggle button.active:hover, .language-toggle button.active:focus-visible {
-        opacity: 1;
-      }
-
-      .language-toggle button:focus-visible {
-        outline: 2px solid light-dark(var(--ddd-theme-default-black),var(--ddd-theme-default-white));
-        outline-offset: -2px;
-      }
-
-      .language-toggle button:first-child:focus-visible {
-          border-radius: var(--ddd-radius-sm) var(--ddd-spacing-0) var(--ddd-spacing-0) var(--ddd-radius-sm);
-        }
-
-      /* CSS button */
-      .language-toggle button:last-child:focus-visible {
-        border-radius: var(--ddd-spacing-0) var(--ddd-radius-sm) var(--ddd-radius-sm) var(--ddd-spacing-0);
-      }
-
-      .action-button {
-        font-family: var(--ddd-font-navigation);
-        font-size: var(--ddd-font-size-xs);
-        font-weight: var(--ddd-font-weight-medium);
-        background-color: var(--ddd-theme-default-skyBlue);
-        border: none;
-        border-radius: var(--ddd-radius-xs);
-        padding: var(--ddd-spacing-2) var(--ddd-spacing-4);
-        color: var(--ddd-theme-default-white);
-      }
-
-      .action-button:not(:disabled):hover, .action-button:focus-visible{
-        box-shadow: var(--ddd-boxShadow-sm);
-        transform: translateY(-1px);
-        transition: 0.3s all ease-in-out;
-        cursor: pointer;
-      }
-
-      .action-button:focus-visible {
-        outline: 2px solid light-dark(var(--ddd-theme-default-black),var(--ddd-theme-default-white));
-        border-radius: var(--ddd-radius-sm);
-      }
-
-      .action-button:disabled {
-        cursor: not-allowed;
-        opacity: 0.55;
-      }
-
-      /* For portrait mode phone */
-      @media (max-width: 600px) {
-        :host {
-          margin: var(--ddd-spacing-2);
-        }
-
-        .panel-titlebar {
-          padding: var(--ddd-spacing-1);
-        }
-
-        .breadcrumbs {
-          font-size: var(--ddd-font-size-s);
-        }
-
-        .breadcrumb-icon {
-          --simple-icon-width: var(--ddd-font-size-s);
-          --simple-icon-height: var(--ddd-font-size-s);
-        }
-
-        .close-button {
-          width: var(--ddd-spacing-8);
-          height: var(--ddd-spacing-8);
-        }
-
-        .close-button simple-icon-lite{
-          --simple-icon-width: var(--ddd-font-size-m);
-          --simple-icon-height: var(--ddd-font-size-m);
-        }
-
-        .panel-shell {
-          max-height: calc(100vh - var(--ddd-spacing-8));
-          overflow-y: auto;
-        }
-
-        .panel-header {
-          padding: var(--ddd-spacing-3);
-        }
-
-        .panel-title {
-          font-size: var(--ddd-font-size-s);
-        }
-
-        .panel-title-icon {
-          --simple-icon-width: var(--ddd-font-size-s);
-          --simple-icon-height: var(--ddd-font-size-s);
-        }
-
-        .panel-description {
-          font-size: var(--ddd-font-size-4xs);
-        }
-
-        .panel-content {
-          padding-left: var(--ddd-spacing-2);
-          padding-right: var(--ddd-spacing-2);
-        }
-
-        .panel-actions {
-          padding: var(--ddd-spacing-3);
-        }
-
-        .action-button {
-          font-size: var(--ddd-font-size-2xs);
-          padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
-        }
-
-        .language-toggle button {
-          font-size: var(--ddd-font-size-5xs);
-          padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
-        }
-      }
-
-      /* For landscape mode phone */
-      @media (max-width: 900px) and (max-height: 500px) {
-        :host {
-          margin: var(--ddd-spacing-2);
-        }
-
-        .panel-titlebar {
-          padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
-        }
-
-        .breadcrumbs {
-          font-size: var(--ddd-font-size-s);
-        }
-
-        .breadcrumb-icon {
-          --simple-icon-width: var(--ddd-font-size-s);
-          --simple-icon-height: var(--ddd-font-size-s);
-        }
-
-        .close-button {
-          width: var(--ddd-spacing-8);
-          height: var(--ddd-spacing-8);
-        }
-
-        .close-button simple-icon-lite{
-          --simple-icon-width: var(--ddd-font-size-m);
-          --simple-icon-height: var(--ddd-font-size-m);
-        }
-
-        .panel-shell {
-          max-height: calc(100vh - var(--ddd-spacing-4));
-          overflow-y: auto;
-        }
-
-        .panel-header {
-          padding: var(--ddd-spacing-2);
-        }
-
-        .panel-title {
-          font-size: var(--ddd-font-size-s);
-        }
-
-        .panel-title-icon {
-          --simple-icon-width: var(--ddd-font-size-s);
-          --simple-icon-height: var(--ddd-font-size-s);
-        }
-
-        .panel-description {
-          font-size: var(--ddd-font-size-4xs);
-        }
-
-        .panel-content {
-          padding-left: var(--ddd-spacing-2);
-          padding-right: var(--ddd-spacing-2);
-          
-        }
-
-        .panel-actions {
-          padding: var(--ddd-spacing-2);
-        }
-
-        .editor-controls {
-          padding-right: var(--ddd-spacing-2);
-        }
-
-        .action-button {
-          font-size: var(--ddd-font-size-2xs);
-          padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
-        }
-
-        .language-toggle button {
-          font-size: var(--ddd-font-size-5xs);
-          padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
-        }
-      }
     `];
   }
 
-  
-
   // Lit render the HTML
   render() {
-    const currentBreadcrumb = this.breadcrumbs[this.breadcrumbs.length - 1];
+    const workspace = this.querySelector("haxcms-code-workspace");
+    const dirty = !!workspace && workspace.hasUnsavedChanges(this.selectedLanguage);
+    const changedLanguages = workspace
+      ? ["javascript", "css"].filter(language => workspace.hasUnsavedChanges(language)) : [];
     const validation = this._validationState[this.selectedLanguage];
-    const saveDisabled = !!this.querySelector("haxcms-code-workspace") &&
-      (!validation || validation.pending || !validation.valid ||
-        !this._previewSaveState || !this._previewSaveState.canSave);
-    const saveHint = saveDisabled
-      ? (!validation || validation.pending || !validation.valid
-        ? (validation && validation.message) || "Waiting for code validation."
-        : (this._previewSaveState && this._previewSaveState.message) || "Waiting for preview.")
-      : "Save customization";
+    const saveDisabled = !!workspace && (!dirty || !validation || validation.pending || !validation.valid ||
+      !this._previewSaveState || !this._previewSaveState.canSave);
+    const languageLabel = this.selectedLanguage === "css" ? "CSS" : "JavaScript";
+    const saveHint = !dirty && workspace ? `No unsaved ${languageLabel} changes.`
+      : saveDisabled ? ((validation && validation.message) || "Waiting for preview.")
+      : `Save ${languageLabel} customization`;
+    const crumbs = this.breadcrumbs.length ? this.breadcrumbs : [
+      { label: "Settings", icon: "settings", screen: "settings" },
+      { label: this.title || "JS/CSS", icon: "code" },
+    ];
     return html`
-    <div class="panel">
-      <div class= "panel-titlebar">
-        <nav class="breadcrumbs" aria-label = "Breadcrumb">
-          ${this.breadcrumbs.map((item, index) => {
-            const isCurrent = index === this.breadcrumbs.length - 1;
-
-            return html`
-              ${isCurrent ? html`
-                <span class = "breadcrumb-current" aria-current="page">
-                  <simple-icon-lite class = "breadcrumb-icon" src = ${this._getIconPath(item.icon)} aria-hidden = "true"></simple-icon-lite>
-                  <span class = "breadcrumb-text">${item.label}</span>
-                </span>
-              `
-              : html`
-              <button type = "button" class = "breadcrumb-button" @click = ${() => this._handleBreadcrumbClick(item)}>
-                <simple-icon-lite class = "breadcrumb-icon" src = ${this._getIconPath(item.icon)} aria-hidden = "true"></simple-icon-lite>
-                <span class = "breadcrumb-text">${item.label}</span>
-              </button>
-            `}
-
-            ${!isCurrent ? html `
-              <span class = "breadcrumb-separator" aria-hidden = "true"> > </span>`
-              : ""}
-          `;
-          })} 
-        </nav>
-        <button class = "close-button" type = "button" aria-label = "Close" @click=${this._closePanel}>
-          <simple-icon-lite src=${this._getIconPath("close")} aria-hidden="true"></simple-icon-lite>
-        </button>
-      </div>
-      <div class = "panel-shell">
-        <div class = "panel-header">
-          <div class = "panel-title-wrapper">
-            <simple-icon-lite class = "panel-title-icon" src = ${this._getIconPath(currentBreadcrumb ? currentBreadcrumb.icon : "")} aria-hidden = "true"></simple-icon-lite>
-            <h2 class = "panel-title">${this.title}</h2>
-          </div>
-          <div class= "panel-description">
-            ${this.description}
-          </div>
-        </div>
-        <div class = "editor-controls">
-          <div class = "language-toggle">
-            <button 
-            type = "button"
-            class = ${this.selectedLanguage === "javascript" ? "active" : ""} 
-            .ariaPressed = ${this.selectedLanguage === "javascript" ? "true" : "false"}
-            @click=${() => this._setLanguage("javascript")}>JavaScript</button>
-            <button 
-            type = "button"
-            class = ${this.selectedLanguage === "css" ? "active" : ""} 
-            .ariaPressed = ${this.selectedLanguage === "css" ? "true" : "false"}
-            @click=${() => this._setLanguage("css")}>CSS</button>
-          </div>
-        </div>
-        <div class = "panel-content">
-          <slot></slot>
-        </div>
-        <div class = "panel-actions">
-          ${this.querySelector("haxcms-code-workspace") ? html`
-            <span class="draft-status" role="status">${this.querySelector("haxcms-code-workspace").hasUnsavedChanges(this.selectedLanguage)
-              ? "Unsaved changes" : "Matches saved file"}</span>
-            <button class="action-button history-button" type="button" aria-haspopup="dialog"
-              aria-controls="code-history-dialog" @click=${this._openHistory}>History</button>
-          ` : ""}
-          <button class = "action-button save-button" ?disabled=${saveDisabled} title=${saveHint} @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
-        </div>
-      </div>
-      <dialog class="history-dialog" id="code-history-dialog" aria-label="Customization history"
-        @cancel=${this._closeHistory} @close=${this._historyClosed}>
-        <div class="history-titlebar">
-          <p>Settings › JS/CSS › History</p>
-          <button class="close-button" type="button" aria-label="Close history" autofocus @click=${this._closeHistory}>
+      <div class="panel">
+        <header class="panel-titlebar">
+          <nav class="breadcrumbs" aria-label="Breadcrumb">
+            ${crumbs.map((item, index) => html`
+              ${index > 0 ? html`<span class="breadcrumb-separator" aria-hidden="true">/</span>` : ""}
+              ${index === crumbs.length - 1 ? html`
+                <span class="breadcrumb-current" aria-current="page">
+                  <simple-icon-lite src=${this._getIconPath(item.icon)} aria-hidden="true"></simple-icon-lite>
+                  <span class="breadcrumb-text">${item.label}</span>
+                </span>` : html`
+                <button type="button" class="breadcrumb-button" @click=${() => this._handleBreadcrumbClick(item)}>
+                  <simple-icon-lite src=${this._getIconPath(item.icon)} aria-hidden="true"></simple-icon-lite>
+                  <span class="breadcrumb-text">${item.label}</span>
+                </button>`}
+            `)}
+          </nav>
+          <button class="close-button" type="button" aria-label="Close settings" @click=${this._closePanel}>
             <simple-icon-lite src=${this._getIconPath("close")} aria-hidden="true"></simple-icon-lite>
           </button>
+        </header>
+        <div class=${this._menuCollapsed ? "panel-layout collapsed" : "panel-layout"}>
+          <nav class="section-rail" aria-label="Settings sections">
+            <button class="rail-button collapse-button" type="button"
+              aria-label=${this._menuCollapsed ? "Expand menu" : "Collapse menu"}
+              aria-expanded=${!this._menuCollapsed} aria-controls="settings-rail-links"
+              @click=${() => { this._menuCollapsed = !this._menuCollapsed; }}>
+              <simple-icon-lite src=${this._getIconPath("menu")} aria-hidden="true"></simple-icon-lite>
+              <span class="rail-text">Collapse menu</span>
+            </button>
+            <p class="rail-label">Customization</p>
+            <div id="settings-rail-links">
+              <button class="rail-button" type="button" aria-current="page" aria-label="JS/CSS customization"
+                @click=${this._focusLanguage}>
+                <simple-icon-lite src=${this._getIconPath("code")} aria-hidden="true"></simple-icon-lite>
+                <span class="rail-text">JS/CSS</span>
+                ${changedLanguages.length ? html`<span class="change-dot" role="img" aria-label="Unsaved changes"></span>` : ""}
+              </button>
+              ${workspace ? html`
+                <button class="rail-button" type="button" aria-label="Open code history" aria-haspopup="dialog"
+                  aria-controls="code-history-dialog" @click=${this._openHistory}>
+                  <simple-icon-lite src=${this._getIconPath("history")} aria-hidden="true"></simple-icon-lite>
+                  <span class="rail-text">History</span>
+                </button>` : ""}
+            </div>
+          </nav>
+          <main class="panel-shell">
+            <header class="panel-header">
+              <h2 class="panel-title">${this.title || "JS/CSS"}</h2>
+              <div class="panel-description">${this.description}</div>
+            </header>
+            <div class="editor-controls">
+              <div class="language-toggle" role="group" aria-label="Code language">
+                ${["javascript", "css"].map(language => html`
+                  <button type="button" class=${this.selectedLanguage === language ? "active" : ""}
+                    aria-pressed=${this.selectedLanguage === language ? "true" : "false"}
+                    @click=${() => this._setLanguage(language)}>
+                    ${language === "css" ? "CSS" : "JavaScript"}
+                    ${changedLanguages.includes(language) ? html`<span class="change-dot" role="img" aria-label="Unsaved changes"></span>` : ""}
+                  </button>`)}
+              </div>
+              ${workspace ? html`
+                <button class="history-button" type="button" aria-haspopup="dialog" aria-controls="code-history-dialog" @click=${this._openHistory}>
+                  <simple-icon-lite src=${this._getIconPath("history")} aria-hidden="true"></simple-icon-lite>
+                  History
+                </button>` : ""}
+            </div>
+            <div class="panel-content"><slot></slot></div>
+            <footer class="panel-actions">
+              <span class="draft-status" role="status">
+                ${dirty ? html`<span class="change-dot" aria-hidden="true"></span><strong>1 unsaved change</strong><span>${languageLabel}</span>`
+                  : html`<span>${changedLanguages.length ? `No unsaved ${languageLabel} changes` : "No unsaved changes"}</span>`}
+              </span>
+              ${workspace ? html`<button type="button" class="action-button discard-button" ?disabled=${!dirty}
+                title=${`Discard unsaved ${languageLabel} changes`} @click=${this._discardChanges}>Discard</button>` : ""}
+              <button type="button" class=${dirty ? "action-button save-button has-changes" : "action-button save-button"}
+                ?disabled=${saveDisabled} title=${saveHint} @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
+            </footer>
+          </main>
         </div>
-        ${this._historyOpen ? html`
-          <haxcms-code-history .language=${this._historyLanguage}
-            @history-language-change=${event => { this._historyLanguage = event.detail.language; }}
-            @load-code-revision=${this._loadHistoryRevision}></haxcms-code-history>
-        ` : ""}
-      </dialog>
-      <haxcms-authentication-prompt
-        @authentication-success=${this.handleAuthenticationSuccess}
-        @authentication-cancel=${this.handleAuthenticationCancel}
-      ></haxcms-authentication-prompt>
-    </div>`;
+        <dialog class="history-dialog" id="code-history-dialog" aria-label="Customization history"
+          @cancel=${this._closeHistory} @close=${this._historyClosed}>
+          <div class="history-titlebar">
+            <p>Settings / JS/CSS / History</p>
+            <button class="close-button" type="button" aria-label="Close history" autofocus @click=${this._closeHistory}>
+              <simple-icon-lite src=${this._getIconPath("close")} aria-hidden="true"></simple-icon-lite>
+            </button>
+          </div>
+          ${this._historyOpen ? html`
+            <haxcms-code-history .language=${this._historyLanguage}
+              @history-language-change=${event => { this._historyLanguage = event.detail.language; }}
+              @load-code-revision=${this._loadHistoryRevision}></haxcms-code-history>` : ""}
+        </dialog>
+        <haxcms-authentication-prompt
+          @authentication-success=${this.handleAuthenticationSuccess}
+          @authentication-cancel=${this.handleAuthenticationCancel}></haxcms-authentication-prompt>
+      </div>`;
+  }
+
+  _focusLanguage() {
+    const button = this.shadowRoot.querySelector(".language-toggle button.active");
+    if (button) button.focus();
+  }
+
+  async _discardChanges() {
+    const workspace = this.querySelector("haxcms-code-workspace");
+    if (workspace) await workspace.discardDraft(this.selectedLanguage);
   }
 
   _getIconPath(icon) {
     const icons = {
+      menu: new URL("./icons/menu.svg", import.meta.url).href,
+      history: new URL("./icons/history.svg", import.meta.url).href,
       settings: new URL("./icons/settings.svg", import.meta.url).href,
       code: new URL("./icons/code.svg", import.meta.url).href,
       close: new URL("./icons/close.svg", import.meta.url).href,

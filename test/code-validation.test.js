@@ -215,6 +215,9 @@ describe("Draft preview and Save validation", () => {
       edit(state, "javascript", "console.log('recovered');");
       await ready(state);
       expect(state.workspace._runtimeError).to.equal("");
+      expect(state.save.disabled).to.equal(true);
+      state.panel._setLanguage("javascript");
+      await state.panel.updateComplete;
       expect(state.save.disabled).to.equal(false);
     });
   }

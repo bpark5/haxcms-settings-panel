@@ -69,13 +69,18 @@ and the browser tests with this repo's runner configuration and coverage.
 CI runs the same checks before building; Pages deployment runs only on pushes
 to the default branch after those checks pass.
 
-The prototype retains its original DDD styling, skyBlue controls, and component
-base classes. Visual alignment and contrast corrections are deferred to HAX
-integration. The existing accessibility audit may flag skyBlue/white contrast.
+The prototype uses DDD tokens and its existing component base classes. The shell
+follows the system-settings layout: a dark breadcrumb bar, collapsible section
+rail, section header, language/history toolbar, scrolling workspace, and persistent
+action bar. The rail is hidden on small screens, where the toolbar remains available.
+Unsaved drafts have change dots in the language controls and navigation. Save
+and Discard apply to the selected language and remain disabled until it changes.
+Discard restores that language's last successfully saved code and preview without
+writing a file or adding history; the other language's draft stays intact.
 
 ## Local customization history
 
-The separate **History** button in the settings panel's bottom action bar opens
+The separate **History** button in the toolbar or navigation rail opens
 a modal popup. Its title bar contains the breadcrumb and Close, followed by a
 page header, read-only language/refresh toolbar, saved-version list and source
 detail panel, and a bottom action bar with **Load into editor**. Changing the

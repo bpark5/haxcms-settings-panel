@@ -102,12 +102,28 @@ export class HaxcmsCodeWorkspace extends DDD {
     if (current !== revision.code && current !== this._savedDrafts[language] &&
       !globalThis.confirm("Replace this language's unsaved draft with the selected revision? The saved file will not change until you click Save.")) return false;
 
+    await this._replaceDraft(language, revision.code);
+    this._historyNotice = "Version loaded into the editor for validation and live preview. Nothing has been saved.";
+    return true;
+  }
+
+  /** Restore the selected draft to its last successful save, without writing. */
+  async discardDraft(language = this.selectedLanguage) {
+    if (!["javascript", "css"].includes(language) || !this.hasUnsavedChanges(language)) return false;
+    await this._replaceDraft(language, this._savedDrafts[language]);
+    this._historyNotice = `${language === "css" ? "CSS" : "JavaScript"} draft discarded. Restored the last saved version.`;
+    return true;
+  }
+
+  async _replaceDraft(language, code) {
+    const editor = this.querySelector(`code-editor[language="${language}"]`);
+    if (!editor) return;
     this._editedLanguages.add(language);
     // Keep the wrapper's backing source aligned too: attribute changes (such
     // as hidden during language switching) make its observer reload this source.
-    editor.editorValue = revision.code;
-    if (revision.code === "") editor.replaceChildren();
-    editor.value = revision.code;
+    editor.editorValue = code;
+    if (code === "") editor.replaceChildren();
+    editor.value = code;
     this._scheduleValidation({ composedPath: () => [editor] });
     await editor.updateComplete;
     // editorValue trims text and ignores empty strings. Also, typing updates
@@ -115,15 +131,13 @@ export class HaxcmsCodeWorkspace extends DDD {
     // cached value must explicitly notify the iframe, since Lit sees no change.
     const monaco = editor.shadowRoot && editor.shadowRoot.querySelector("#codeeditor");
     if (monaco) {
-      if (monaco.value === revision.code) {
-        monaco.monacoValueChanged(revision.code);
+      if (monaco.value === code) {
+        monaco.monacoValueChanged(code);
       } else {
-        monaco.value = revision.code;
+        monaco.value = code;
       }
       await monaco.updateComplete;
     }
-    this._historyNotice = "Version loaded into the editor for validation and live preview. Nothing has been saved.";
-    return true;
   }
 
   _scheduleValidation(event) {
@@ -264,7 +278,7 @@ export class HaxcmsCodeWorkspace extends DDD {
     css`
       :host {
         display: block;
-        font-family: var(--ddd-font-primary);
+        font-family: var(--ddd-font-navigation);
         color: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
       }
 
@@ -272,29 +286,28 @@ export class HaxcmsCodeWorkspace extends DDD {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: var(--ddd-spacing-4);
-        margin-top: var(--ddd-spacing-4);
+        margin-top: 0;
       }
 
       .editor-section, .preview-section, .preview-status {
         min-width: 0;
-        border: var(--ddd-border-sm);
+        border: 1px solid light-dark(var(--ddd-theme-default-limestoneLight), var(--ddd-theme-default-slateGray));
         border-radius: var(--ddd-radius-sm);
         overflow: hidden;
       }
 
       .heading {
         padding: var(--ddd-spacing-3) var(--ddd-spacing-4);
-        background: var(--ddd-theme-default-black);
-        color: var(--ddd-theme-default-white);
+        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
+        color: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
         border-bottom: var(--ddd-border-sm);
       }
 
-      .history-notice 
-      { 
-        grid-column: 1 / -1; 
-        margin: 0; 
-        overflow-wrap: anywhere; 
-        font-size: var(--ddd-font-size-3xs)
+      .history-notice {
+        grid-column: 1 / -1;
+        margin: 0;
+        overflow-wrap: anywhere;
+        font-size: var(--ddd-font-size-5xs);
       }
 
       .preview-section {
@@ -307,7 +320,7 @@ export class HaxcmsCodeWorkspace extends DDD {
       }
 
       .preview-window {
-        border: var(--ddd-border-xs);
+        border: 1px solid light-dark(var(--ddd-theme-default-limestoneLight), color-mix(in srgb, var(--ddd-theme-default-white) 18%, transparent));
         border-radius: var(--ddd-radius-sm);
         overflow: hidden;
         box-shadow: var(--ddd-boxShadow-sm);
@@ -322,7 +335,7 @@ export class HaxcmsCodeWorkspace extends DDD {
         padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
         background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-nittanyNavy));
         color: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
-        border-bottom: var(--ddd-border-xs);
+        border-bottom: 1px solid light-dark(var(--ddd-theme-default-limestoneLight), color-mix(in srgb, var(--ddd-theme-default-white) 18%, transparent));
         font-family: var(--ddd-font-navigation);
         font-size: var(--ddd-font-size-5xs);
       }
@@ -339,27 +352,26 @@ export class HaxcmsCodeWorkspace extends DDD {
         margin: 0;
         padding: var(--ddd-spacing-4);
         overflow-wrap: anywhere;
-        font-size: var(--ddd-font-size-3xs)
+        font-size: var(--ddd-font-size-5xs);
       }
 
       .editor-title, .preview-title {
         margin: 0;
         font-family: var(--ddd-font-navigation);
-        font-size: var(--ddd-font-size-2xs);
+        font-size: var(--ddd-font-size-4xs);
         font-weight: var(--ddd-font-weight-bold);
         line-height: var(--ddd-lh-150);
       }
 
       .editor-description, .preview-description {
         margin: var(--ddd-spacing-1) 0 0;
-        font-family: var(--ddd-font-primary);
-        font-size: var(--ddd-font-size-4xs);
+        font-family: var(--ddd-font-navigation);
+        font-size: var(--ddd-font-size-5xs);
         line-height: var(--ddd-lh-150);
       }
 
       .editor, iframe {
-        height: 620px;
-        height: clamp(420px, 65vh, 760px);
+        height: clamp(320px, 48vh, 620px);
       }
 
       ::slotted(code-editor) {
@@ -384,7 +396,6 @@ export class HaxcmsCodeWorkspace extends DDD {
         .workspace {
           grid-template-columns: minmax(0, 1fr);
         }
-
       }
     `];
   }
