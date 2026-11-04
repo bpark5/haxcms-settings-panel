@@ -682,10 +682,10 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     }
 
     if (this.panelVisible) {
-      const actionButton = this.shadowRoot.querySelector(".save-button");
+      const languageButton = this.shadowRoot.querySelector(".language-toggle button.active");
 
-      if (actionButton) {
-        actionButton.focus();
+      if (languageButton) {
+        languageButton.focus();
       }
     }
   }

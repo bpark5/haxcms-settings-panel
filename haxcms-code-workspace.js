@@ -289,7 +289,13 @@ export class HaxcmsCodeWorkspace extends DDD {
         border-bottom: var(--ddd-border-sm);
       }
 
-      .history-notice { grid-column: 1 / -1; margin: 0; overflow-wrap: anywhere; }
+      .history-notice 
+      { 
+        grid-column: 1 / -1; 
+        margin: 0; 
+        overflow-wrap: anywhere; 
+        font-size: var(--ddd-font-size-3xs)
+      }
 
       .preview-section {
         border-color: light-dark(var(--ddd-theme-default-slateGray), var(--ddd-theme-default-slateLight));
@@ -331,7 +337,7 @@ export class HaxcmsCodeWorkspace extends DDD {
       .validation-status, .preview-draft-status, .preview-runtime-status {
         grid-column: 1 / -1;
         margin: 0;
-        padding: var(--ddd-spacing-3);
+        padding: var(--ddd-spacing-4);
         overflow-wrap: anywhere;
         font-size: var(--ddd-font-size-3xs)
       }
