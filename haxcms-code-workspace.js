@@ -140,6 +140,22 @@ export class HaxcmsCodeWorkspace extends DDD {
     }
   }
 
+  /** Focus the selected language control after authentication or navigation. */
+  async focusLanguage() {
+    await this.updateComplete;
+    const button = this.shadowRoot.querySelector(".language-toggle button.active");
+    if (button) button.focus();
+  }
+
+  _setLanguage(language) {
+    this.selectedLanguage = language;
+    this.dispatchEvent(new CustomEvent("language-change", {
+      detail: { language },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
   _scheduleValidation(event) {
     for (const language of ["javascript", "css"]) {
       const editor = this.querySelector(`code-editor[language="${language}"]`);
@@ -303,6 +319,74 @@ export class HaxcmsCodeWorkspace extends DDD {
         border-bottom: var(--ddd-border-sm);
       }
 
+      .editor-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ddd-spacing-4);
+        flex-wrap: wrap;
+        padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
+      }
+
+      .language-toggle {
+        display: inline-grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: calc(2 * var(--ddd-spacing-24));
+        max-width: 100%;
+        border: 1px solid var(--panel-muted);
+        border-radius: var(--ddd-radius-xs);
+        overflow: hidden;
+      }
+
+      .language-toggle button {
+        box-sizing: border-box;
+        min-width: 0;
+        font: inherit;
+        font-size: var(--ddd-font-size-5xs);
+        line-height: var(--ddd-lh-120);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--ddd-spacing-1);
+        min-height: var(--ddd-spacing-7);
+        padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
+        border: 0;
+        border-right: 1px solid var(--panel-muted);
+        background: transparent;
+        color: var(--panel-text);
+      }
+
+      .language-toggle button:last-child {
+        border-right: 0;
+      }
+
+      .language-toggle button.active {
+        background: var(--panel-selected);
+        font-weight: var(--ddd-font-weight-bold);
+      }
+
+      .language-toggle button:not(.active):hover {
+        background: light-dark(
+          var(--ddd-theme-default-limestoneMaxLight),
+          color-mix(in srgb, var(--ddd-theme-default-white) 8%, transparent)
+        );
+      }
+
+      .language-toggle button:focus-visible {
+        outline: 2px solid var(--ddd-theme-default-keystoneYellow);
+        outline-offset: -3px;
+      }
+
+      .change-dot {
+        display: inline-block;
+        flex: none;
+        width: var(--ddd-spacing-2);
+        height: var(--ddd-spacing-2);
+        border-radius: var(--ddd-radius-circle);
+        background: var(--ddd-theme-default-skyBlue);
+      }
+
       .history-notice {
         grid-column: 1 / -1;
         margin: 0;
@@ -401,12 +485,24 @@ export class HaxcmsCodeWorkspace extends DDD {
   }
 
   render() {
+    const changedLanguages = ["javascript", "css"].filter(language => this.hasUnsavedChanges(language));
     return html`
       <div class = "workspace">
         <div class = "editor-section" aria-labelledby = "editor-heading">
           <div class = "heading">
             <h3 class = "editor-title" id = "editor-heading">Code editor</h3>
             <p class = "editor-description">JavaScript and CSS drafts are kept separately.</p>
+          </div>
+          <div class="editor-controls">
+            <div class="language-toggle" role="group" aria-label="Code language">
+              ${["javascript", "css"].map(language => html`
+                <button type="button" class=${this.selectedLanguage === language ? "active" : ""}
+                  aria-pressed=${this.selectedLanguage === language ? "true" : "false"}
+                  @click=${() => this._setLanguage(language)}>
+                  ${language === "css" ? "CSS" : "JavaScript"}
+                  ${changedLanguages.includes(language) ? html`<span class="change-dot" role="img" aria-label="Unsaved changes"></span>` : ""}
+                </button>`)}
+            </div>
           </div>
           <div class = "editor">
             <slot class = "editor-slot" @slotchange=${this._validateEditors}></slot>
