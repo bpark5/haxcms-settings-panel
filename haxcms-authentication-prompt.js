@@ -1,7 +1,8 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html } from "lit";
+import { authenticationStyles } from "./lib/authentication-styles.js";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
-import "@haxtheweb/simple-fields/lib/simple-fields-field.js";
+import "@haxtheweb/rpg-character/rpg-character.js";
 
 export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
@@ -12,6 +13,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   constructor() {
     super();
 
+    this.username = "";
+    this._usernameDraft = "";
     this.password = "";
     this.showPassword = false;
     this.opened = false;
@@ -24,6 +27,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   static get properties() {
     return {
       ...super.properties,
+      username: { type: String },
+      _usernameDraft: { state: true },
       password: { type: String },
       showPassword: { type: Boolean },
       opened: { type: Boolean, reflect: true },
@@ -34,488 +39,64 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   static get styles() {
-    return [
-      super.styles,
-      css`
-        :host {
-          display: block;
-          font-family: var(--ddd-font-navigation);
-        }
-
-        .overlay {
-          position: fixed;
-          inset: var(--ddd-spacing-0);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: var(--ddd-spacing-4);
-          box-sizing: border-box;
-          overflow-y: auto;
-          background: rgba(0, 0, 0, 0.9);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(4px);
-          z-index: 1000;
-        }
-
-          .authentication-prompt {
-          width: min(500px, 100%);
-          max-height: calc(100dvh - var(--ddd-spacing-8));
-          display: flex;
-          flex-direction: column;
-          background: light-dark(
-            var(--ddd-theme-default-white),
-            var(--ddd-theme-default-coalyGray)
-          );
-          border: 2px solid light-dark(
-            var(--ddd-theme-default-black),
-            var(--ddd-theme-default-white)
-          );
-          border-radius: var(--ddd-radius-md);
-          overflow: hidden;
-          box-shadow: var(--ddd-boxShadow-md);
-          color: light-dark(
-            var(--ddd-theme-default-black),
-            var(--ddd-theme-default-white)
-          );
-        }
-
-        .titlebar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: var(--ddd-spacing-3);
-          background: var(--ddd-theme-default-black);
-          color: var(--ddd-theme-default-white);
-        }
-
-        .titlebar h3 {
-          margin: var(--ddd-spacing-0);
-          font-size: var(--ddd-font-size-m);
-          font-family: var(--ddd-font-navigation);
-          font-weight: var(--ddd-font-weight-bold);
-        }
-
-        .close-button {
-          width: var(--ddd-spacing-10);
-          height: var(--ddd-spacing-10);
-          cursor: pointer;
-          border: none;
-          background: transparent;
-          color: var(--ddd-theme-default-white);
-          border-radius: var(--ddd-radius-circle);
-        }
-
-        .close-button simple-icon-lite{
-          --simple-icon-width: var(--ddd-font-size-m);
-          --simple-icon-height: var(--ddd-font-size-m);
-          --simple-icon-color: currentColor;
-        }
-
-        .close-button:hover simple-icon-lite {
-          --simple-icon-color: var(--ddd-theme-default-skyBlue);
-        }
-
-        .close-button:focus-visible {
-          outline: none;
-          border: none;
-        }
-
-        .close-button:focus-visible simple-icon-lite {
-          outline: 2px solid var(--ddd-theme-default-skyBlue);
-          outline-offset: 2px;
-          border-radius: var(--ddd-radius-circle);
-          --simple-icon-color: var(--ddd-theme-default-skyBlue);
-        }
-
-        .prompt-content {
-          padding: var(--ddd-spacing-4);
-          overflow-y: auto;
-          background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
-        }
-
-        .prompt-content p {
-          margin: var(--ddd-spacing-0);
-          padding-top: var(--ddd-spacing-1);
-          font-family: var(--ddd-font-primary);
-          font-size: var(--ddd-font-size-xs);
-          line-height: var(--ddd-lh-150);
-          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-        }
-
-        .password-input {
-          --visibility-button-size: var(--ddd-spacing-8);
-          display: flex;
-          align-items: center;
-          width: 100%;
-          margin-top: var(--ddd-spacing-3);
-        }
-
-        .password-input simple-fields-field {
-          flex: 1;
-          min-width: 0;
-          border-radius: var(--ddd-radius-sm);
-          overflow: hidden;
-
-          --simple-fields-font-family: var(--ddd-font-primary);
-          --simple-fields-font-size: var(--ddd-font-size-3xs);
-          --simple-fields-placeholder-font-style: normal;
-          --simple-fields-field-margin: var(--ddd-spacing-0);
-          
-          --simple-fields-accent-color: var(--ddd-theme-default-skyBlue);
-
-          --simple-fields-background-color: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
-          --simple-fields-border-color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-        }
-
-        .password-input simple-fields-field::part(option-input) {
-          box-sizing: border-box;
-          padding-top: var(--ddd-spacing-3);
-          padding-bottom: var(--ddd-spacing-2);
-          padding-left: var(--ddd-spacing-3);
-          padding-right: calc(var(--visibility-button-size) + var(--ddd-spacing-3));
-          font-size: var(--ddd-font-size-3xs);
-          border-radius: var(--ddd-radius-sm);
-        }
-
-        .password-input simple-fields-field::part(label) {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: var(--ddd-spacing-0);
-          margin: -1px;
-          overflow: hidden;
-          clip-path: inset(50%);
-          white-space: nowrap;
-          border: var(--ddd-spacing-0);
-        }
-
-        .password-input simple-fields-field::part(option-input)::placeholder {
-          color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-          opacity: 0.6;
-        }
-
-        .show-password {
-          flex: 0 0 var(--visibility-button-size);
-          width: var(--visibility-button-size);
-          height: var(--visibility-button-size);
-
-          margin-left: calc(-1 * var(--visibility-button-size));
-          transform: translateX(calc(-1 * var(--ddd-spacing-2)));
-
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-
-          padding: var(--ddd-spacing-0);
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          z-index: 1;
-
-          color: light-dark(
-            var(--ddd-theme-default-black),
-            var(--ddd-theme-default-white)
-          );
-        }
-
-        .show-password simple-icon-lite {
-          --simple-icon-width: var(--ddd-font-size-m);
-          --simple-icon-height: var(--ddd-font-size-m);
-          --simple-icon-color: currentColor;
-        }
-
-        .show-password:hover simple-icon-lite {
-          opacity: 0.8;
-        }
-
-        .error-message {
-          margin-top: var(--ddd-spacing-2);
-          font-size: var(--ddd-font-size-xs);
-          line-height: var(--ddd-lh-150);
-          font-family: var(--ddd-font-primary);
-          color: var(--ddd-theme-default-original87Pink);
-          font-weight: var(--ddd-font-weight-bold);
-        }
-
-       .actions {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: var(--ddd-spacing-3);
-          margin-top: var(--ddd-spacing-4);
-        }
-
-        
-        .continue-button{
-          min-height: 44px;
-          font-family: var(--ddd-font-navigation);
-          font-size: var(--ddd-font-size-xs);
-          font-weight: var(--ddd-font-weight-medium);
-          border-radius: var(--ddd-radius-xs);
-          padding: var(--ddd-spacing-2) var(--ddd-spacing-4);
-          cursor: pointer;
-        }
-
-        
-        .continue-button {
-          background-color: var(--ddd-theme-default-skyBlue);
-          color: var(--ddd-theme-default-white);
-          border: none;
-        }
-
-        .continue-button:hover{
-          box-shadow: var(--ddd-boxShadow-sm);
-          transform: translateY(-1px);
-          transition: 0.3s all ease-in-out;
-        }
-
-        
-        .continue-button:focus-visible{
-          outline: 3px solid var(--ddd-theme-default-skyBlue);
-          outline-offset: 2px;
-        }
-
-        
-        .continue-button:disabled {
-          cursor: not-allowed;
-          opacity: 0.5;
-          transform: none;
-          box-shadow: none;
-        }
-
-        @media (max-width: 600px) {
-          .overlay {
-            padding: var(--ddd-spacing-2);
-          }
-
-          .authentication-prompt {
-            width: 90%;
-            max-width: 360px;
-            max-height: calc(100dvh - var(--ddd-spacing-8));
-          }
-
-          .titlebar {
-            padding: var(--ddd-spacing-1);
-          }
-
-          .titlebar h3 {
-            font-size: var(--ddd-font-size-s);
-            padding-left: var(--ddd-spacing-2);
-          }
-
-          .close-button {
-            width: var(--ddd-spacing-8);
-            height: var(--ddd-spacing-8);
-
-            --simple-icon-width: var(--ddd-font-size-m);
-            --simple-icon-height: var(--ddd-font-size-m);
-          }
-
-          .prompt-content {
-            padding: var(--ddd-spacing-3);
-          }
-
-          .prompt-content p {
-            font-size: var(--ddd-font-size-4xs);
-          }
-
-          .password-input simple-fields-field::part(option-input) {
-            font-size: var(--ddd-font-size-4xs);
-          }
-
-          .show-password simple-icon-lite {
-            --simple-icon-width: var(--ddd-font-size-s);
-            --simple-icon-height: var(--ddd-font-size-s);
-          }
-
-          .error-message {
-            font-size: var(--ddd-font-size-4xs);
-          }
-
-          .continue-button{
-            font-size: var(--ddd-font-size-2xs);
-            padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
-          }
-
-          .actions {
-            margin-top: var(--ddd-spacing-3);
-          }
-        }
-
-        @media (max-width: 900px) and (max-height: 500px) {
-          .overlay {
-            align-items: flex-start;
-            padding: var(--ddd-spacing-2);
-          }
-
-          .authentication-prompt {
-            width: 90%;
-            max-width: 500px;
-            max-height: calc(100dvh - var(--ddd-spacing-4));
-          }
-
-          .titlebar {
-            padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
-          }
-
-          .titlebar h3 {
-            font-size: var(--ddd-font-size-s);
-            padding-left: var(--ddd-spacing-2);
-          }
-
-          .close-button {
-            width: var(--ddd-spacing-8);
-            height: var(--ddd-spacing-8);
-
-            --simple-icon-width: var(--ddd-font-size-m);
-            --simple-icon-height: var(--ddd-font-size-m);
-          }
-
-          .prompt-content {
-            padding: var(--ddd-spacing-2);
-          }
-
-          .prompt-content p {
-            font-size: var(--ddd-font-size-4xs);
-          }
-
-          .password-input {
-            margin-top: var(--ddd-spacing-2);
-          }
-
-          .password-input simple-fields-field::part(option-input) {
-            font-size: var(--ddd-font-size-4xs);
-            padding-top: var(--ddd-spacing-2);
-            padding-bottom: var(--ddd-spacing-2);
-          }
-
-          .show-password simple-icon-lite {
-            --simple-icon-width: var(--ddd-font-size-s);
-            --simple-icon-height: var(--ddd-font-size-s);
-          }
-
-          .error-message {
-            font-size: var(--ddd-font-size-4xs);
-            margin-top: var(--ddd-spacing-1);
-          }
-
-          .continue-button {
-            font-size: var(--ddd-font-size-2xs);
-            padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
-          }
-
-          .actions {
-            margin-top: var(--ddd-spacing-2);
-          }
-}
-      `,
-    ];
+    return [super.styles, authenticationStyles];
   }
 
   render() {
-    if (!this.opened) {
-      return html``;
-    }
-
+    if (!this.opened) return html``;
     return html`
-      <div
-        class="overlay"
-        role="presentation"
-      >
-        <div
-          class="authentication-prompt"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="authentication-title"
-          aria-describedby="authentication-description"
+      <div class="overlay" role="presentation">
+        <div class="authentication-prompt" role="dialog" aria-modal="true"
+          aria-labelledby="authentication-title" aria-describedby="authentication-description"
           aria-busy=${this.authenticating ? "true" : "false"}
-          @keydown=${this.handleDialogKeydown}
-        >
-
+          @keydown=${this.handleDialogKeydown}>
           <div class="titlebar">
             <h3 id="authentication-title">
-              <simple-icon-lite
-              src=${this._getIconPath("lock")}
-              ></simple-icon-lite>
-              Authentication Needed
+              <simple-icon-lite src=${this._getIconPath("key")} aria-hidden="true"></simple-icon-lite>
+              Login to HAX
             </h3>
-
-              <button
-                class="close-button"
-                type="button"
-                aria-label=${this.required ? "Back to settings" : "Close"}
-                @click=${this.handleClose}
-              >
-                <simple-icon-lite src=${this._getIconPath("close")}></simple-icon-lite>
-              </button>
+            <button class="close-button" type="button"
+              aria-label=${this.required ? "Back to settings" : "Close"} @click=${this.handleClose}>
+              <simple-icon-lite src=${this._getIconPath("close")} aria-hidden="true"></simple-icon-lite>
+            </button>
           </div>
-
           <div class="prompt-content">
-
-            <p id="authentication-description">
-              ${this.required 
-                ? "Enter your HAX account password to continue to site settings."
-                : "Enter your HAX account password to save your code."}
+            <rpg-character seed=${this.username || "hax"} height="95" width="75" aria-hidden="true"></rpg-character>
+            ${this.username ? html`
+            <p id="authentication-description" class="welcome">
+              Welcome back, ${this.username}!
+              <button class="switch-account" type="button" @click=${this._changeAccount}>Not you?</button>
             </p>
-
             <div class="password-input">
-
-              <simple-fields-field
-                id="password"
-                type=${this.showPassword ? "text" : "password"}
-                .value=${this.password}
-                @value-changed=${this.passwordChanged}
-                @keydown=${this.handleKeydown}
-                label="Password"
-                placeholder="Enter Your Password"
-                autocomplete="current-password"
-                aria-describedby=${this.errorMessage 
-                  ? "authentication-description authentication-error" 
-                  : "authentication-description"} 
-                aria-invalid=${this.errorMessage ? "true" : "false"}
-                ?disabled=${this.authenticating}
-              >
-              </simple-fields-field>
-
-              <button
-                type="button"
+              <input id="password" type=${this.showPassword ? "text" : "password"}
+                .value=${this.password} @input=${this.passwordChanged} @keydown=${this.handleKeydown}
+                aria-label="Password" placeholder="Enter your password" autocomplete="current-password"
+                aria-describedby=${this.errorMessage ? "authentication-description authentication-error" : "authentication-description"}
+                aria-invalid=${this.errorMessage ? "true" : "false"} ?disabled=${this.authenticating}>
+              <button type="button" class="show-password" @click=${this.togglePassword}
                 aria-label=${this.showPassword ? "Hide password" : "Show password"}
-                class="show-password"
-                @click=${this.togglePassword}
-                ?disabled=${this.authenticating}
-              >
-                <simple-icon-lite src=${this._getIconPath(this.showPassword ? "visibility-off" : "visibility")}></simple-icon-lite>
+                aria-pressed=${this.showPassword ? "true" : "false"} ?disabled=${this.authenticating}>
+                <simple-icon-lite src=${this._getIconPath(this.showPassword ? "visibility" : "visibility-off")} aria-hidden="true"></simple-icon-lite>
               </button>
-
             </div>
-
-            ${this.errorMessage
-              ? html`
-                  <div
-                  id="authentication-error"
-                    class="error-message"
-                    role="alert"
-                  >
-                    ${this.errorMessage}
-                  </div>
-                `
-              : ""}
-
-      <div class="actions">
-        <button
-        class="continue-button"
-        type="button"
-        @click=${this.continueAuthentication}
-        ?disabled=${!this.password || this.authenticating}
-          >
-        ${this.authenticating
-          ? "Authenticating..."
-          : "Continue"}
-        </button>
-
-        </div>
-
-
+            ${this.errorMessage ? html`<p id="authentication-error" class="error-message" role="alert">${this.errorMessage}</p>` : ""}
+            <button class="continue-button" type="button" @click=${this.continueAuthentication}
+              ?disabled=${!this.password || this.authenticating}>
+              <simple-icon-lite src=${this._getIconPath("login")} aria-hidden="true"></simple-icon-lite>
+              ${this.authenticating ? "Authenticating..." : "Login"}
+            </button>
+            ` : html`
+              <p id="authentication-description" class="welcome">Enter your username to continue.</p>
+              <input id="username" aria-label="Username" autocomplete="username" placeholder="Enter your username"
+                .value=${this._usernameDraft}
+                @input=${event => this._usernameDraft = event.target.value}
+                @keydown=${event => { if (event.key === "Enter") this._selectAccount(); }}>
+              <button class="continue-button" type="button" @click=${this._selectAccount}
+                ?disabled=${!this._usernameDraft.trim()}>Next</button>
+            `}
+            <p class="authentication-status" role="status" aria-live="polite">
+              ${this.authenticating ? "Authenticating..." : ""}
+            </p>
           </div>
         </div>
       </div>
@@ -524,6 +105,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
   _getIconPath(icon) {
     const icons = {
+      key: new URL("./icons/key.svg", import.meta.url).href,
+      login: new URL("./icons/login.svg", import.meta.url).href,
       close: new URL("./icons/close.svg", import.meta.url).href,
       visibility: new URL("./icons/visibility.svg", import.meta.url).href,
       "visibility-off": new URL("./icons/visibility-off.svg", import.meta.url).href,
@@ -531,6 +114,33 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     };
 
     return icons[icon] || "";
+  }
+
+  _selectAccount() {
+    const username = this._usernameDraft.trim();
+    if (!username) return;
+    this.username = username;
+    this.password = "";
+    this.errorMessage = "";
+    this.dispatchEvent(new CustomEvent("username-change", {
+      detail: { username }, bubbles: true, composed: true,
+    }));
+    this.updateComplete.then(() => this.shadowRoot.querySelector("#password").focus());
+  }
+
+  _changeAccount() {
+    if (this.authController) this.authController.abort();
+    this.authController = null;
+    this.authenticating = false;
+    this.password = "";
+    this.showPassword = false;
+    this.errorMessage = "";
+    this.username = "";
+    this._usernameDraft = "";
+    this.dispatchEvent(new CustomEvent("username-change", {
+      detail: { username: "" }, bubbles: true, composed: true,
+    }));
+    this.updateComplete.then(() => this.shadowRoot.querySelector("#username").focus());
   }
 
   open(required = false) {
@@ -547,7 +157,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
     this.updateComplete.then(() => {
       if (this.shadowRoot) {
-        const passwordField = this.shadowRoot.querySelector("#password");
+        const passwordField = this.shadowRoot.querySelector("#password, #username");
 
         if (passwordField) {
           passwordField.focus();
@@ -658,7 +268,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
         const focusableElements = [ 
           ...dialog.querySelectorAll( 
-            "simple-fields-field, button:not([disabled])", 
+            "input:not([disabled]), button:not([disabled])",
           ), 
         ].filter((element) => !element.hasAttribute("disabled")); 
 

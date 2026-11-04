@@ -29,6 +29,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     this.actionButton = "Save";
     this.panelVisible = true;
     this.selectedLanguage = "javascript";
+    this.username = "";
     this._validationState = {};
     this._menuCollapsed = false;
     this._historyOpen = false;
@@ -48,6 +49,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       actionButton: {type: String},
       panelVisible: {type: Boolean, reflect: true},
       selectedLanguage: { type: String },
+      username: { type: String },
       _validationState: { state: true },
       _previewSaveState: { state: true },
       _menuCollapsed: { state: true },
@@ -699,6 +701,8 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
               @load-code-revision=${this._loadHistoryRevision}></haxcms-code-history>` : ""}
         </dialog>
         <haxcms-authentication-prompt
+          .username=${this.username}
+          @username-change=${event => this.username = event.detail.username}
           @authentication-success=${this.handleAuthenticationSuccess}
           @authentication-cancel=${this.handleAuthenticationCancel}></haxcms-authentication-prompt>
       </div>`;
