@@ -121,10 +121,11 @@ button {
 }
 
 .resource-card {
-  padding: var(--ddd-spacing-6);
-  border: var(--ddd-border-sm);
-  border-radius: var(--ddd-radius-md);
-  background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-nittanyNavy));
+  --ddd-card-img-height: var(--ddd-spacing-0);
+  --ddd-card-height: auto;
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 .resource-card .eyebrow {

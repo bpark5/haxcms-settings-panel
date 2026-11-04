@@ -20,6 +20,7 @@
 /dist/
 /out-tsc/
 /public/
+/mock-site/history/
 
 storybook-static
 custom-elements.json

@@ -8,11 +8,7 @@
   </head>
   <body class="site-page">
     <header class="site-header">
-      <a class="site-name" href="#main">Learning studio</a>
-      <nav class="site-navigation" aria-label="Site">
-        <a class="site-link" href="#overview">Overview</a>
-        <a class="site-link" href="#resources">Resources</a>
-      </nav>
+      <span class="site-name">Learning studio</span>
     </header>
     <main class="site-content" id="main" tabindex="-1">
       <section class="site-section" id="overview" aria-labelledby="page-title">
@@ -25,18 +21,14 @@
       <section class="site-section" id="resources" aria-labelledby="resources-title">
         <h2 class="section-title" id="resources-title">Start exploring</h2>
         <div class="resource-grid">
-          <article class="resource-card">
+          <ddd-card class="resource-card" id="learn-card" title="Build your foundation">
             <p class="eyebrow">01 · Learn</p>
-            <h3 class="resource-title">Build your foundation</h3>
             <p class="resource-description">Connect new ideas to what you already know.</p>
-            <a class="site-link" href="#page-title">Review the overview</a>
-          </article>
-          <article class="resource-card">
+          </ddd-card>
+          <ddd-card class="resource-card" id="practice-card" title="Put ideas into action">
             <p class="eyebrow">02 · Practice</p>
-            <h3 class="resource-title">Put ideas into action</h3>
             <p class="resource-description">Use a small experiment to explore a bigger question.</p>
-            <a class="site-link" href="#preview-action">Try the activity</a>
-          </article>
+          </ddd-card>
         </div>
       </section>
     </main>

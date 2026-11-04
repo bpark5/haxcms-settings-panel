@@ -7,6 +7,7 @@ import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
 import "./haxcms-authentication-prompt.js";
+import "./haxcms-code-history.js";
 
 /**
  * `haxcms-settings-panel`
@@ -28,6 +29,11 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     this.actionButton = "Save";
     this.panelVisible = true;
     this.selectedLanguage = "javascript";
+    this._validationState = {};
+    this._historyOpen = false;
+    this._historyLanguage = "javascript";
+    this.addEventListener("code-validation", this._handleCodeValidation);
+    this.addEventListener("preview-state", this._handlePreviewState);
   }
 
   // Lit reactive properties
@@ -39,7 +45,11 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       description: { type: String },
       actionButton: {type: String},
       panelVisible: {type: Boolean, reflect: true},
-      selectedLanguage: { type: String }
+      selectedLanguage: { type: String },
+      _validationState: { state: true },
+      _previewSaveState: { state: true },
+      _historyOpen: { state: true },
+      _historyLanguage: { state: true }
     };
   }
 
@@ -194,6 +204,58 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         justify-content: flex-end;
         padding: var(--ddd-spacing-4);
         margin-top: var(--ddd-spacing-0);
+        gap: var(--ddd-spacing-3);
+        flex-wrap: wrap;
+      }
+
+      .draft-status {
+        margin-right: auto;
+        font-family: var(--ddd-font-primary);
+        font-size: var(--ddd-font-size-3xs);
+      }
+
+      .history-button {
+        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
+        color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+      }
+
+      .history-dialog {
+        padding: var(--ddd-spacing-0);
+        width: min(1100px, calc(100vw - var(--ddd-spacing-8)));
+        max-width: none;
+        max-height: calc(100dvh - var(--ddd-spacing-8));
+        border: var(--ddd-border-sm);
+        border-radius: var(--ddd-radius-sm);
+        box-shadow: var(--ddd-boxShadow-lg);
+        background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
+        color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
+      }
+
+      .history-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.65);
+      }
+
+      .history-titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ddd-spacing-3);
+        padding: var(--ddd-spacing-3);
+        background: var(--ddd-theme-default-black);
+        color: var(--ddd-theme-default-white);
+        font-family: var(--ddd-font-navigation);
+      }
+
+      .history-titlebar p {
+        margin: var(--ddd-spacing-0);
+        font-size: var(--ddd-font-size-3xs);
+      }
+
+      @media (max-width: 600px) {
+        .history-dialog {
+          width: calc(100vw - var(--ddd-spacing-4));
+          max-height: calc(100dvh - var(--ddd-spacing-4));
+        }
       }
 
       .editor-controls {
@@ -260,7 +322,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         color: var(--ddd-theme-default-white);
       }
 
-      .action-button:hover, .action-button:focus-visible{
+      .action-button:not(:disabled):hover, .action-button:focus-visible{
         box-shadow: var(--ddd-boxShadow-sm);
         transform: translateY(-1px);
         transition: 0.3s all ease-in-out;
@@ -270,6 +332,11 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       .action-button:focus-visible {
         outline: 2px solid light-dark(var(--ddd-theme-default-black),var(--ddd-theme-default-white));
         border-radius: var(--ddd-radius-sm);
+      }
+
+      .action-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
       }
 
       /* For portrait mode phone */
@@ -426,6 +493,15 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   // Lit render the HTML
   render() {
     const currentBreadcrumb = this.breadcrumbs[this.breadcrumbs.length - 1];
+    const validation = this._validationState[this.selectedLanguage];
+    const saveDisabled = !!this.querySelector("haxcms-code-workspace") &&
+      (!validation || validation.pending || !validation.valid ||
+        !this._previewSaveState || !this._previewSaveState.canSave);
+    const saveHint = saveDisabled
+      ? (!validation || validation.pending || !validation.valid
+        ? (validation && validation.message) || "Waiting for code validation."
+        : (this._previewSaveState && this._previewSaveState.message) || "Waiting for preview.")
+      : "Save customization";
     return html`
     <div class="panel">
       <div class= "panel-titlebar">
@@ -485,9 +561,29 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
           <slot></slot>
         </div>
         <div class = "panel-actions">
-          <button class = "action-button" @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
+          ${this.querySelector("haxcms-code-workspace") ? html`
+            <span class="draft-status" role="status">${this.querySelector("haxcms-code-workspace").hasUnsavedChanges(this.selectedLanguage)
+              ? "Unsaved changes" : "Matches saved file"}</span>
+            <button class="action-button history-button" type="button" aria-haspopup="dialog"
+              aria-controls="code-history-dialog" @click=${this._openHistory}>History</button>
+          ` : ""}
+          <button class = "action-button save-button" ?disabled=${saveDisabled} title=${saveHint} @click=${() => this._openAuthenticationPrompt(false)}>${this.actionButton}</button>
         </div>
       </div>
+      <dialog class="history-dialog" id="code-history-dialog" aria-label="Customization history"
+        @cancel=${this._closeHistory} @close=${this._historyClosed}>
+        <div class="history-titlebar">
+          <p>Settings › JS/CSS › History</p>
+          <button class="close-button" type="button" aria-label="Close history" autofocus @click=${this._closeHistory}>
+            <simple-icon-lite src=${this._getIconPath("close")} aria-hidden="true"></simple-icon-lite>
+          </button>
+        </div>
+        ${this._historyOpen ? html`
+          <haxcms-code-history .language=${this._historyLanguage}
+            @history-language-change=${event => { this._historyLanguage = event.detail.language; }}
+            @load-code-revision=${this._loadHistoryRevision}></haxcms-code-history>
+        ` : ""}
+      </dialog>
       <haxcms-authentication-prompt
         @authentication-success=${this.handleAuthenticationSuccess}
         @authentication-cancel=${this.handleAuthenticationCancel}
@@ -518,6 +614,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   _closePanel() {
+    this._closeHistory();
     this.panelVisible = false;
     this.dispatchEvent(
       new CustomEvent("close-panel", {
@@ -525,6 +622,38 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         composed: true,
       })
     );
+  }
+
+  async _openHistory() {
+    if (!this.querySelector("haxcms-code-workspace")) return;
+    this._historyLanguage = this.selectedLanguage;
+    this._historyOpen = true;
+    await this.updateComplete;
+    const dialog = this.shadowRoot.querySelector(".history-dialog");
+    if (!dialog.open) dialog.showModal();
+  }
+
+  _closeHistory(event) {
+    if (event) event.preventDefault();
+    const dialog = this.shadowRoot.querySelector(".history-dialog");
+    if (dialog && dialog.open) dialog.close();
+    this._historyOpen = false;
+  }
+
+  _historyClosed() {
+    this._historyOpen = false;
+    const button = this.shadowRoot.querySelector(".history-button");
+    if (button) button.focus();
+  }
+
+  async _loadHistoryRevision(event) {
+    const workspace = this.querySelector("haxcms-code-workspace");
+    const { language, revision } = event.detail;
+    if (workspace && await workspace.loadHistoryRevision(language, revision)) {
+      workspace.selectedLanguage = language;
+      this._setLanguage(language);
+      this._closeHistory();
+    }
   }
 
   _openAuthenticationPrompt(required = false) {
@@ -553,18 +682,30 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     }
 
     if (this.panelVisible) {
-      const actionButton = this.shadowRoot.querySelector(".action-button");
+      const languageButton = this.shadowRoot.querySelector(".language-toggle button.active");
 
-      if (actionButton) {
-        actionButton.focus();
+      if (languageButton) {
+        languageButton.focus();
       }
     }
   }
 
+  _handleCodeValidation(event) {
+    if (event.target !== this.querySelector("haxcms-code-workspace")) return;
+    const { language } = event.detail;
+    if (language !== "javascript" && language !== "css") return;
+    this._validationState = { ...this._validationState, [language]: event.detail };
+  }
+
   _validateCodeForSave() {
-    if (this.selectedLanguage !== "javascript") return true;
     const workspace = this.querySelector("haxcms-code-workspace");
-    return workspace?.validateJavaScriptDraft?.() ?? true;
+    if (!workspace) return true;
+    return workspace.validateDraft(this.selectedLanguage) && workspace.canSavePreview;
+  }
+
+  _handlePreviewState(event) {
+    if (event.target !== this.querySelector("haxcms-code-workspace")) return;
+    this._previewSaveState = event.detail;
   }
 
   async handleAuthenticationCancel() {
@@ -573,7 +714,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     await prompt.updateComplete;
 
     if (this.panelVisible) {
-      const actionButton = this.shadowRoot.querySelector(".action-button");
+      const actionButton = this.shadowRoot.querySelector(".save-button");
       if (actionButton) {
         actionButton.focus();
       }

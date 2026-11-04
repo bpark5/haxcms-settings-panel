@@ -65,6 +65,8 @@
       const language = e.detail.language;
       if (!Object.hasOwn(editors, language)) return;
 
+      document.querySelector("haxcms-code-workspace").selectedLanguage = language;
+
       for (const [name, editor] of Object.entries(editors)) {
         editor.hidden = name !== language;
       }
@@ -76,12 +78,10 @@
       if (saving) return;
 
       const language = event.detail.language;
-      if (language !== "javascript") {
-        alert("CSS saving isn't implemented yet.");
-        return;
-      }
+      if (!Object.hasOwn(editors, language)) return;
 
       saving = true;
+      const code = editors[language].value ?? "";
       try {
         const response = await fetch("/mock-save-code", {
           method: "POST",
@@ -90,11 +90,11 @@
           },
           body: JSON.stringify({
             language,
-            code: editors.javascript.value ?? "",
+            code,
           }),
         });
 
-        if (!response.headers.get("content-type")?.includes("application/json")) {
+        if (!(response.headers.get("content-type") || "").includes("application/json")) {
           throw new Error(
             `Save endpoint returned HTTP ${response.status} instead of JSON. Restart vercel dev and reload this page.`,
           );
@@ -105,7 +105,8 @@
           throw new Error(result.message || "Unable to save.");
         }
 
-        alert("JavaScript saved.");
+        document.querySelector("haxcms-code-workspace").markSaved(language, code);
+        alert(`${language === "css" ? "CSS" : "JavaScript"} saved.`);
       } catch (error) {
         alert(`Save failed: ${error.message}`);
       } finally {
