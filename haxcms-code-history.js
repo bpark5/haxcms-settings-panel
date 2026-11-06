@@ -1,4 +1,5 @@
 import { html, css } from "lit";
+import { haxUiStyles } from "./lib/hax-ui-styles.js";
 import { DDD } from "@haxtheweb/d-d-d/d-d-d.js";
 
 /** Inspect saved code as text. Only an explicit action loads an editor draft. */
@@ -94,116 +95,160 @@ export class HaxcmsCodeHistory extends DDD {
   }
 
   static get styles() {
-    return [super.styles, css`
+    return [super.styles, haxUiStyles, css`
       :host {
-        display: block;
-        font-family: var(--ddd-font-primary);
-        color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-        background: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
-      }
-
-      .toolbar {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--ddd-spacing-2);
-        padding: var(--ddd-spacing-3) var(--ddd-spacing-4);
-        border-top: var(--ddd-border-xs);
-        border-bottom: var(--ddd-border-xs);
-        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
+        flex-direction: column;
+        max-height: calc(100dvh - var(--ddd-spacing-24));
+        min-height: 0;
+        font-family: var(--hax-ui-admin-font-family);
+        font-size: var(--hax-ui-admin-font-size);
+        color: var(--hax-ui-text);
+        background: var(--hax-ui-surface);
       }
 
-      .page-header {
-        padding: var(--ddd-spacing-4);
-      }
-
-      .language-tabs {
-        display: flex;
-        gap: var(--ddd-spacing-1);
-      }
-
-      h4 {
-        margin: var(--ddd-spacing-0) var(--ddd-spacing-0) var(--ddd-spacing-2);
-        font-family: var(--ddd-font-navigation);
-        font-size: var(--ddd-font-size-3xs);
-      }
-
-      .feedback {
-        padding: var(--ddd-spacing-3) var(--ddd-spacing-4);
-      }
-
-      h3 {
-        margin: var(--ddd-spacing-0);
-        font-family: var(--ddd-font-primary);
-        font-size: var(--ddd-font-size-m);
-        font-weight: var(--ddd-font-weight-bold);
-      }
-
-      p {
-        margin: var(--ddd-spacing-0);
-        padding-top: var(--ddd-spacing-1);
-        font-family: var(--ddd-font-primary);
-        font-size: var(--ddd-font-size-3xs);
-        line-height: var(--ddd-lh-150);
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       [hidden] {
         display: none !important;
       }
 
+      .page-header {
+        flex: none;
+        padding: var(--ddd-spacing-4) var(--ddd-spacing-5) var(--hax-ui-gap-lg);
+        border-bottom: 1px solid var(--hax-ui-line);
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: var(--ddd-font-weight-bold);
+        line-height: 1.2;
+      }
+
+      h4 {
+        margin: 0 0 var(--hax-ui-gap-md);
+        font-size: var(--hax-ui-admin-font-size);
+        font-weight: var(--ddd-font-weight-bold);
+      }
+
+      p {
+        margin: var(--hax-ui-gap) 0 0;
+        font-size: var(--hax-ui-admin-font-size);
+        line-height: 1.5;
+        color: var(--hax-ui-text-muted);
+      }
+
+      .toolbar {
+        display: flex;
+        flex: none;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--hax-ui-gap-md);
+        padding: var(--hax-ui-gap-lg) var(--ddd-spacing-5);
+        border-bottom: 1px solid var(--hax-ui-line);
+      }
+
+      button {
+        min-height: var(--hax-ui-row-height);
+        padding: 0 var(--hax-ui-gap-lg);
+        border: 1px solid var(--hax-ui-line-strong);
+        border-radius: var(--hax-ui-radius);
+        background: var(--hax-ui-surface);
+        color: var(--hax-ui-text);
+        font-family: var(--hax-ui-admin-font-family);
+        font-size: 13px;
+        font-weight: var(--ddd-font-weight-medium, 500);
+        cursor: pointer;
+      }
+
+      button:not(:disabled):hover {
+        background: var(--hax-ui-hover);
+      }
+
+      button:focus-visible {
+        outline: var(--hax-ui-focus-width) solid var(--hax-ui-focus);
+        outline-offset: 2px;
+      }
+
+      button:disabled {
+        cursor: default;
+        color: var(--hax-ui-text-muted);
+      }
+
+      .language-tabs {
+        display: inline-grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 192px;
+        max-width: 100%;
+        border: 1px solid var(--hax-ui-line-strong);
+        border-radius: var(--hax-ui-radius);
+        overflow: hidden;
+      }
+
+      .language-tabs button {
+        min-width: 0;
+        min-height: 0;
+        height: calc(var(--hax-ui-row-height) - 2px);
+        padding: 0 10px;
+        border: 0;
+        border-radius: 0;
+      }
+
+      .language-tabs button + button {
+        border-left: 1px solid var(--hax-ui-line-strong);
+      }
+
+      .language-tabs button[aria-pressed="true"] {
+        background: var(--hax-ui-accent-soft);
+        box-shadow: inset 0 -3px 0 var(--hax-ui-accent-strong);
+        font-weight: var(--ddd-font-weight-bold);
+      }
+
+      .language-tabs button:focus-visible {
+        outline-offset: -2px;
+      }
+
+      .feedback {
+        flex: none;
+        margin: 0;
+        padding: var(--hax-ui-gap-lg) var(--ddd-spacing-5);
+      }
+
       .columns {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
         gap: var(--ddd-spacing-4);
-        padding: var(--ddd-spacing-4);
+        min-height: 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+        padding: var(--ddd-spacing-4) var(--ddd-spacing-5);
       }
 
       ul {
         display: flex;
         flex-direction: column;
-        gap: var(--ddd-spacing-2);
+        gap: var(--hax-ui-gap-md);
         list-style: none;
-        margin: var(--ddd-spacing-0);
-        padding: var(--ddd-spacing-0);
-      }
-
-      button {
-        font-family: var(--ddd-font-navigation);
-        font-size: var(--ddd-font-size-4xs);
-        border: none;
-        border-radius: var(--ddd-radius-sm);
-        padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
-        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
-        color: light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-        cursor: pointer;
+        margin: 0;
+        padding: 0;
       }
 
       li button {
         width: 100%;
+        padding: var(--hax-ui-gap-md) var(--hax-ui-gap-lg);
         text-align: left;
         overflow-wrap: anywhere;
-        line-height: var(--ddd-lh-150);
+        line-height: 1.5;
       }
 
-      button[aria-pressed="true"] {
-        background: var(--ddd-theme-default-skyBlue);
-        color: var(--ddd-theme-default-white);
+      li button[aria-pressed="true"] {
+        background: var(--hax-ui-selected);
+        border-color: var(--hax-ui-accent-strong);
         font-weight: var(--ddd-font-weight-bold);
-      }
-
-      button:not(:disabled):hover {
-        box-shadow: var(--ddd-boxShadow-sm);
-      }
-
-      button:focus-visible {
-        outline: 2px solid light-dark(var(--ddd-theme-default-black), var(--ddd-theme-default-white));
-        outline-offset: 2px;
-      }
-
-      button:disabled {
-        cursor: not-allowed;
-        opacity: 0.55;
       }
 
       .source {
@@ -215,41 +260,52 @@ export class HaxcmsCodeHistory extends DDD {
         overflow-wrap: anywhere;
         overflow: auto;
         max-height: 24rem;
-        margin: var(--ddd-spacing-2) var(--ddd-spacing-0) var(--ddd-spacing-4);
-        padding: var(--ddd-spacing-3);
-        border: var(--ddd-border-xs);
-        border-radius: var(--ddd-radius-xs);
+        margin: var(--hax-ui-gap-md) 0 0;
+        padding: var(--hax-ui-gap-lg);
+        border: 1px solid var(--hax-ui-line);
+        border-radius: var(--hax-ui-radius);
         font-family: var(--ddd-font-mono);
-        font-size: var(--ddd-font-size-4xs);
-        line-height: var(--ddd-lh-150);
-        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
-      }
-
-      .load-revision {
-        font-size: var(--ddd-font-size-xs);
-        font-weight: var(--ddd-font-weight-medium);
-        border-radius: var(--ddd-radius-xs);
-        padding: var(--ddd-spacing-2) var(--ddd-spacing-4);
-        background: var(--ddd-theme-default-skyBlue);
-        color: var(--ddd-theme-default-white);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--hax-ui-text);
+        background: var(--hax-ui-sunken);
       }
 
       .history-actions {
         display: flex;
+        flex: none;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: var(--ddd-spacing-3);
-        padding: var(--ddd-spacing-4);
-        border-top: var(--ddd-border-xs);
+        gap: var(--hax-ui-gap-lg);
+        min-height: var(--hax-ui-action-bar-height);
+        padding: var(--hax-ui-gap-md) var(--ddd-spacing-5);
+        border-top: 1px solid var(--hax-ui-line);
       }
 
       .history-actions p {
-        padding-top: var(--ddd-spacing-0);
+        margin: 0;
+        font-size: 13px;
+      }
+
+      .load-revision {
+        min-width: 88px;
+      }
+
+      .load-revision:not(:disabled) {
+        background: var(--hax-ui-primary);
+        border-color: var(--hax-ui-primary);
+        color: var(--hax-ui-on-primary);
+        font-weight: var(--ddd-font-weight-bold);
+      }
+
+      .load-revision:not(:disabled):hover {
+        background: var(--hax-ui-primary-hover);
+        border-color: var(--hax-ui-primary-hover);
       }
 
       .error {
-        color: light-dark(var(--ddd-theme-default-original87Pink), var(--ddd-theme-default-white));
+        color: var(--hax-ui-danger);
       }
 
       @media (max-width: 768px) {
@@ -260,28 +316,15 @@ export class HaxcmsCodeHistory extends DDD {
 
       @media (max-width: 600px), (max-width: 900px) and (max-height: 500px) {
         h3 {
-          font-size: var(--ddd-font-size-s);
+          font-size: 18px;
         }
 
-        p, pre {
-          font-size: var(--ddd-font-size-4xs);
-        }
-
-        button {
-          font-size: var(--ddd-font-size-5xs);
-        }
-
-        .load-revision {
-          font-size: var(--ddd-font-size-2xs);
-          padding: var(--ddd-spacing-1) var(--ddd-spacing-3);
-        }
-
-        .columns {
-          gap: var(--ddd-spacing-3);
+        .page-header p {
+          font-size: var(--hax-ui-admin-font-size-xs);
         }
 
         .page-header, .toolbar, .columns, .history-actions {
-          padding: var(--ddd-spacing-3);
+          padding: var(--hax-ui-gap-md) var(--hax-ui-gap-lg);
         }
       }
     `];

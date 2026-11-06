@@ -1,3 +1,4 @@
+import { haxUiStyles } from "./lib/hax-ui-styles.js";
 /**
  * Copyright 2026 cjh6976-prog
  * @license Apache-2.0, see LICENSE for full text.
@@ -60,15 +61,15 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
 
   // Lit scoped styles
   static get styles() {
-    return [super.styles,
+    return [super.styles, haxUiStyles,
     css`
       :host {
-        --panel-surface: light-dark(var(--ddd-theme-default-white), var(--ddd-theme-default-coalyGray));
+        --panel-surface: var(--hax-ui-surface);
         --panel-rail: light-dark(var(--ddd-theme-default-limestoneMaxLight), color-mix(in srgb, var(--ddd-theme-default-coalyGray) 80%, var(--ddd-theme-default-black)));
-        --panel-text: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
-        --panel-muted: light-dark(var(--ddd-theme-default-slateGray), var(--ddd-theme-default-limestoneGray));
-        --panel-line: light-dark(var(--ddd-theme-default-limestoneLight), color-mix(in srgb, var(--ddd-theme-default-white) 18%, transparent));
-        --panel-selected: color-mix(in srgb, var(--ddd-theme-default-skyBlue) 16%, var(--panel-surface));
+        --panel-text: var(--hax-ui-text);
+        --panel-muted: var(--hax-ui-text-muted);
+        --panel-line: var(--hax-ui-line);
+        --panel-selected: var(--hax-ui-selected);
         display: block;
         height: calc(100dvh - 2 * var(--ddd-spacing-4));
         min-height: 0;
@@ -97,8 +98,8 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       button:focus-visible {
-        outline: 2px solid var(--ddd-theme-default-keystoneYellow);
-        outline-offset: 3px;
+        outline: var(--hax-ui-focus-width) solid var(--hax-ui-focus);
+        outline-offset: 2px;
       }
 
       simple-icon-lite {
@@ -125,7 +126,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         gap: var(--ddd-spacing-4);
         min-height: var(--ddd-spacing-12);
         padding: 0 var(--ddd-spacing-3) 0 var(--ddd-spacing-4);
-        background: var(--ddd-theme-default-potentialMidnight);
+        background: var(--hax-ui-titlebar);
         color: var(--ddd-theme-default-white);
       }
 
@@ -175,7 +176,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         color: currentColor;
         opacity: 0.55;
         font-weight: var(--ddd-font-weight-regular);
-        margin: 0 var(--ddd-spacing-1);
+        margin: 0 var(--ddd-spacing-2);
       }
 
       .close-button {
@@ -187,7 +188,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         border: 0;
         color: inherit;
         background: transparent;
-        border-radius: var(--ddd-radius-xs);
+        border-radius: var(--ddd-radius-circle);
       }
 
       .close-button simple-icon-lite {
@@ -195,13 +196,16 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         --simple-icon-height: var(--ddd-icon-sm, 40px);
       }
 
-      .close-button:hover {
-        color: var(--ddd-theme-skyBlue)
+      .close-button:hover, .close-button:focus-visible {
+        color: var(--ddd-theme-default-skyBlue);
+        opacity: 0.7;
+        outline: 2px solid currentColor;
+        outline-offset: 0;
       }
 
       .panel-layout {
         display: grid;
-        grid-template-columns: 192px minmax(0, 1fr);
+        grid-template-columns: var(--hax-ui-rail-width) minmax(0, 1fr);
         min-height: 0;
         container-type: inline-size;
         container-name: settings-panel;
@@ -209,7 +213,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .panel-layout.collapsed {
-        grid-template-columns: 56px minmax(0, 1fr);
+        grid-template-columns: var(--hax-ui-rail-width-collapsed) minmax(0, 1fr);
       }
 
       .section-rail {
@@ -243,7 +247,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .rail-button:hover {
-        background: color-mix(in srgb, var(--panel-text) 6%, transparent);
+        background: var(--hax-ui-hover);
       }
 
       .collapse-button {
@@ -312,19 +316,20 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .panel-header {
-        padding: var(--ddd-spacing-5) var(--ddd-spacing-6);
+        padding: var(--ddd-spacing-4) var(--ddd-spacing-5) var(--hax-ui-gap-lg);
         border-bottom: 1px solid var(--panel-line);
       }
 
       .panel-title {
         margin: 0;
-        font-size: var(--ddd-font-size-s);
+        font-size: 22px;
         font-weight: var(--ddd-font-weight-bold);
         line-height: var(--ddd-lh-120);
       }
 
       .panel-description {
-        margin-top: var(--ddd-spacing-2);
+        margin: var(--hax-ui-gap) 0 0;
+        font-size: var(--hax-ui-admin-font-size);
         color: var(--panel-muted);
         line-height: var(--ddd-lh-150);
       }
@@ -333,7 +338,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         display: inline-flex;
         align-items: center;
         gap: var(--ddd-spacing-2);
-        border: 1px solid var(--panel-muted);
+        border: 1px solid var(--hax-ui-line-strong);
         border-radius: var(--ddd-radius-xs);
         background: transparent;
         color: var(--panel-text);
@@ -345,7 +350,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .history-button:hover {
-        background: var(--panel-selected);
+        background: var(--hax-ui-hover);
       }
 
       .panel-content {
@@ -360,7 +365,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         align-items: center;
         gap: var(--hax-ui-gap-lg, var(--ddd-spacing-3));
         flex-wrap: wrap;
-        min-height: 56px;
+        min-height: var(--hax-ui-action-bar-height);
         padding: var(--hax-ui-gap-md, var(--ddd-spacing-2)) var(--ddd-spacing-5);
         border-top: 1px solid var(--hax-ui-line, var(--panel-line));
         background: var(--hax-ui-surface, var(--panel-surface));
@@ -420,7 +425,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .save-button {
-        border: 1px solid var(--panel-muted);
+        border: 1px solid var(--hax-ui-line-strong);
         color: var(--panel-text);
         background: transparent;
       }
@@ -448,7 +453,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       .discard-button:not(:disabled):hover {
-        background: var(--panel-selected);
+        background: var(--hax-ui-hover);
       }
 
       .history-dialog {
@@ -472,14 +477,10 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         align-items: center;
         justify-content: space-between;
         gap: var(--ddd-spacing-3);
-        padding: var(--ddd-spacing-3) var(--ddd-spacing-5);
-        background: var(--ddd-theme-default-potentialMidnight);
+        min-height: var(--hax-ui-titlebar-height);
+        padding: 0 var(--ddd-spacing-5);
+        background: var(--hax-ui-titlebar);
         color: var(--ddd-theme-default-white);
-      }
-
-      .history-titlebar p {
-        margin: 0;
-        font-weight: var(--ddd-font-weight-bold);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -509,7 +510,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         }
 
         .panel-layout, .panel-layout.collapsed {
-          grid-template-columns: 56px minmax(0, 1fr);
+          grid-template-columns: var(--hax-ui-rail-width-collapsed) minmax(0, 1fr);
         }
 
         .section-rail {
@@ -554,7 +555,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         }
 
         .panel-title {
-          font-size: var(--ddd-font-size-3xs);
+          font-size: 18px;
         }
 
         .panel-description {
@@ -580,6 +581,21 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       }
 
       @container settings-panel (max-width: 760px) {
+        .panel-header {
+          padding: var(--hax-ui-gap-md) var(--hax-ui-gap-lg);
+        }
+
+        .panel-title {
+          font-size: 18px;
+        }
+
+        .panel-description {
+          font-size: var(--hax-ui-admin-font-size-xs);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
         .panel-actions {
           gap: var(--hax-ui-gap-md, var(--ddd-spacing-2));
           padding: var(--hax-ui-gap-md, var(--ddd-spacing-2)) var(--hax-ui-gap-lg, var(--ddd-spacing-3));
@@ -654,7 +670,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
               </svg>
               <span class="rail-text">${this._menuCollapsed ? "Expand menu" : "Collapse menu"}</span>
             </button>
-            <p class="rail-label">Customization</p>
+            <p class="rail-label">Advanced</p>
             <div id="settings-rail-links">
               <button class="rail-button" type="button" aria-current="page" aria-label="JS/CSS customization"
                 @click=${this._focusLanguage}>
@@ -690,7 +706,22 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         <dialog class="history-dialog" id="code-history-dialog" aria-label="Customization history"
           @cancel=${this._closeHistory} @close=${this._historyClosed}>
           <div class="history-titlebar">
-            <p>Settings / JS/CSS / History</p>
+            <nav class="breadcrumbs" aria-label="History breadcrumb">
+              <span class="breadcrumb-button">
+                <simple-icon-lite src=${this._getIconPath("settings")} aria-hidden="true"></simple-icon-lite>
+                <span class="breadcrumb-text">Settings</span>
+              </span>
+              <span class="breadcrumb-separator" aria-hidden="true">/</span>
+              <span class="breadcrumb-button">
+                <simple-icon-lite src=${this._getIconPath("code")} aria-hidden="true"></simple-icon-lite>
+                <span class="breadcrumb-text">JS/CSS</span>
+              </span>
+              <span class="breadcrumb-separator" aria-hidden="true">/</span>
+              <span class="breadcrumb-current" aria-current="page">
+                <simple-icon-lite src=${this._getIconPath("history")} aria-hidden="true"></simple-icon-lite>
+                <span class="breadcrumb-text">History</span>
+              </span>
+            </nav>
             <button class="close-button" type="button" aria-label="Close history" autofocus @click=${this._closeHistory}>
               <simple-icon-lite src=${this._getIconPath("close")} aria-hidden="true"></simple-icon-lite>
             </button>

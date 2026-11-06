@@ -1,4 +1,4 @@
-import { html, fixture, expect } from "@open-wc/testing";
+import { html, fixture, expect, waitUntil } from "@open-wc/testing";
 import "../haxcms-authentication-prompt.js";
 import { setViewport } from "@web/test-runner-commands";
 
@@ -59,7 +59,8 @@ describe("Authentication prompt", () => {
     prompt.authenticating = true;
     await prompt.updateComplete;
     expect(prompt.shadowRoot.querySelector('[role="dialog"]').getAttribute("aria-busy")).to.equal("true");
-    expect(prompt.shadowRoot.querySelector('[role="status"]').textContent).to.include("Authenticating");
+    expect(prompt.shadowRoot.querySelector(".continue-button").textContent).to.include("Authenticating");
+    expect(prompt.shadowRoot.querySelector(".authentication-status")).to.equal(null);
     expect(prompt.shadowRoot.querySelector(".continue-button").disabled).to.equal(true);
     expect(prompt.shadowRoot.querySelector(".show-password").disabled).to.equal(true);
   });
@@ -93,19 +94,59 @@ describe("Authentication prompt", () => {
     expect(prompt.shadowRoot.textContent).not.to.include("Welcome back, admin!");
   });
 
-  it("lets an unknown account enter a username and change it without closing", async () => {
-    prompt.shadowRoot.querySelector('.switch-account').click();
+  it("opens directly to the password without requiring a username", async () => {
+    prompt.username = "";
+    prompt.open(true);
     await prompt.updateComplete;
     expect(prompt.opened).to.equal(true);
-    expect(prompt.shadowRoot.querySelector('#password')).to.equal(null);
-    const input = prompt.shadowRoot.querySelector('#username');
-    input.value = "  jordan  ";
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await prompt.updateComplete;
-    prompt.shadowRoot.querySelector('.continue-button').click();
-    await prompt.updateComplete;
-    expect(prompt.username).to.equal("jordan");
-    expect(prompt.shadowRoot.querySelector('.welcome').textContent).to.include("Welcome back, jordan!");
-    expect(prompt.password).to.equal("");
+    expect(prompt.shadowRoot.querySelector('#username')).to.equal(null);
+    expect(prompt.shadowRoot.querySelector('.switch-account')).to.equal(null);
+    const password = prompt.shadowRoot.querySelector('#password');
+    expect(password).not.to.equal(null);
+    expect(prompt.shadowRoot.activeElement).to.equal(password);
+    expect(prompt.shadowRoot.querySelector('.welcome').textContent).to.include("Enter your HAX account password");
+    expect(prompt.shadowRoot.querySelector('.continue-button').disabled).to.equal(true);
+  });
+
+  it("still verifies the password, rejects incorrect input, and allows a retry without a username", async () => {
+    const originalFetch = globalThis.fetch;
+    const submitted = [];
+    globalThis.fetch = async (url, options) => {
+      expect(url).to.equal('/api/mock-authentication');
+      const body = JSON.parse(options.body);
+      submitted.push(body);
+      const success = body.password === 'demo123';
+      return new Response(JSON.stringify({ success, message: 'Incorrect password. Please try again.' }), {
+        status: success ? 200 : 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+    try {
+      prompt.username = '';
+      prompt.open(true);
+      await prompt.updateComplete;
+      let result;
+      prompt.addEventListener('authentication-success', event => result = event.detail);
+      for (const value of ['wrong-password', 'demo123']) {
+        const input = prompt.shadowRoot.querySelector('#password');
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await prompt.updateComplete;
+        prompt.shadowRoot.querySelector('.continue-button').click();
+        await waitUntil(() => !prompt.authenticating);
+        if (value === 'wrong-password') {
+          expect(prompt.opened).to.equal(true);
+          expect(prompt.errorMessage).to.include('Incorrect password');
+          expect(result).to.equal(undefined);
+          expect(prompt.shadowRoot.querySelector('#username')).to.equal(null);
+        }
+      }
+      expect(prompt.opened).to.equal(false);
+      expect(prompt.password).to.equal('');
+      expect(result).to.deep.equal({ required: true });
+      expect(submitted).to.deep.equal([{ password: 'wrong-password' }, { password: 'demo123' }]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
