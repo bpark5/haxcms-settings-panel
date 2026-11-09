@@ -40,7 +40,9 @@ export default {
       minify: true,
       target: ['chrome120', 'firefox121', 'edge120', 'safari17.2'],
     }),
-    importMetaAssets(),
+    // The avatar constructs optional sprite URLs before deciding to render them.
+    // Keep its relative paths instead of generating a strict asset lookup.
+    importMetaAssets({ exclude: '**/node_modules/@haxtheweb/rpg-character/**' }),
     babel({
       plugins: [
         [
@@ -62,6 +64,10 @@ export default {
     }),
     copy({
       targets: [
+        {
+          src: 'node_modules/@haxtheweb/rpg-character/lib',
+          dest: 'public',
+        },
         {
           src: 'node_modules/@haxtheweb/d-d-d/locales/ddd-card.es.json',
           dest: 'public/locales',
