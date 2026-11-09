@@ -57,7 +57,7 @@ npx web-test-runner test/code-validation.test.js --node-resolve
 
 - `npm install` - Install project dependencies
 - `npm start` - Start the frontend development server
-- `vercel dev` - Run the development server with the mock authentication API
+- `vercel dev` - Optionally wrap the development server; authorization also works with `npm start`
 - `npm run build` - Build and analyze the component
 - `npm run test` - Run tests
 - `npm run release` - Build, version bump, and publish
@@ -180,7 +180,7 @@ Undefined JavaScript globals are not rejected by this backend syntax check.
 Empty strings remain valid for clearing a customization. This checks syntax,
 not safety or authorization. Restart the development server to load handler changes.
 
-Save uses the existing mock authentication flow and posts the selected editor's
+Save uses the local nonce authorization flow described below and posts the selected editor's
 text to `/mock-save-code`. The server maps `javascript` to `mock-site/custom.js`
 and `css` to `mock-site/custom.css`; client-supplied paths are never used. Each save
 updates only that language's file. Empty drafts clear that language's customization.
@@ -196,3 +196,82 @@ the middleware/dependencies.
 Try typing `.page-title { color: rebeccapurple; }` in the CSS tab. The mock site's
 heading should change after the validation pause, before Save. Save keeps the
 customization; switching back to JavaScript keeps its draft.
+
+## Local nonce authorization
+
+Restart with `npm start` after installing dependencies, then reload the page.
+Enter `demo123` in the opening password dialog. This verifies the demo account
+and grants a reusable nonce for **60 seconds after password verification**.
+Save valid JavaScript or CSS during that minute without another password prompt.
+Saves do not extend the deadline. After a minute, the next Save asks for the
+password again. Cancelling or failing authentication preserves both editor
+drafts. Loading a history revision remains a draft operation, not a save.
+Saved JS/CSS and history output are excluded from development-server live reload
+so a save does not reload the page and erase the in-memory nonce or other draft.
+Source-code edits still trigger normal live reload.
+
+The development server provides three authorization steps:
+
+- `GET /mock-session` simulates an existing login and returns a signed development
+  JWT (15-minute lifetime) and the demo account's user token. This public bootstrap
+  is intentionally a local fixture, never a production login mechanism.
+- `POST /mock-authentication` checks `Authorization: Bearer ...`, the matching
+  `X-HAXCMS-User-Token`, and `{ "password": "demo123" }`. Only successful verification
+  issues a nonce with expiry metadata.
+- `POST /mock-save-code` requires those identity headers plus
+  `X-HAXCMS-Reauthentication: <nonce>` and the existing `{ language, code }` body.
+  Identity and nonce validity are checked again inside the store queue before
+  writing either active code or preserved history.
+
+The server derives a key from a dedicated server secret and the validated user
+token using HMAC-SHA-256. AES-256-GCM protects the issue timestamp, account, version,
+and reauthentication purpose with a fresh random IV for every issued nonce.
+Nonces are not bound to a language or payload and are not consumed by a save.
+Malformed, future-dated, tampered, or 60-second-old nonces are rejected.
+
+Credentials live only in frontend memory and are never sent into the preview or
+written to history. The backend checks every save regardless of the client clock.
+An explicit `REAUTH_REQUIRED` rejection opens the password prompt and permits one
+retry of the same submitted snapshot. Session/user-token failures, network errors,
+and persistence failures do not automatically retry a save. Newer edits stay dirty.
+An expired demo JWT requires a page reload; copy unsaved drafts before reloading.
+
+No secret setup is required for a single local server: signing and nonce secrets
+are random per process, so restarting invalidates existing credentials. Optional
+server launch variables `HAX_MOCK_JWT_SECRET` and `HAX_MOCK_REAUTH_SECRET` can supply
+independent high-entropy secrets (at least 32 random bytes each). Do not put secrets
+in browser source. The legacy `/api/mock-authentication` adapter uses the same
+service; separate processes must have matching environment keys. The demo page
+uses `/mock-authentication` in the same process as saves to avoid that split.
+
+This implementation does not call real HAX APIs or modify the real OpenAPI spec.
+Future integration replaces the simulated session and identity/password checks
+with HAX's request-scoped authentication and adds the real protected-save contract.
+
+### Invalid inputs and password cooldown
+
+Three incorrect password attempts within 15 minutes trigger a **60-second
+server-enforced cooldown** on the demo account. The third failure returns HTTP 429
+with `AUTH_RATE_LIMITED`, a `Retry-After` header and `retryAfterSeconds`. During the
+cooldown, even the correct password is refused; the dialog disables Login and
+shows a countdown. Successful password verification resets the failure count.
+Reloading or obtaining another demo JWT does not reset the server's counter.
+
+Nonce generation also permits at most 20 password-check requests per minute per
+demo account, including successful ones, to bound expensive hashing. Authentication
+accepts only a JSON object containing one password string (1–1024 UTF-8 bytes).
+The local route limits the body to 4 KiB; saves retain their 1 MiB limit. JWTs are
+bounded before verification, user-token lengths are checked before comparison,
+and nonce parts must use canonical base64url encoding.
+
+Run `npm run test:fuzz` for reproducible, seeded mutation tests covering 1,400
+JWT/token/nonce/body mutations plus malformed-type and boundary cases. The save
+tests use a temporary store and assert that rejected requests change neither
+active files nor history. Cooldown tests use a controlled clock instead of waiting.
+These tests are also included in `npm test`.
+
+Fuzzing attempts cannot be prevented, and passing a finite corpus does not prove
+all possible inputs safe. The tests exercise rejection and persistence guarantees;
+they are not a production load/DoS audit. Limits are in memory per local server
+process and reset on restart. Real integration should use HAX's shared rate-limit
+infrastructure; this mock does not supply distributed enforcement.

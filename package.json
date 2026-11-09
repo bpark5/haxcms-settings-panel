@@ -28,6 +28,7 @@
         "test:watch": "web-test-runner \"test/**/*.test.js\" --node-resolve --config web-test-runner.config.mjs --watch",
         "precheck": "node scripts/precheck.mjs",
         "test:node": "node --test test/*.test.mjs",
+        "test:fuzz": "node --test test/authorization-fuzz.test.mjs",
         "test:browser": "web-test-runner \"test/**/*.test.js\" --coverage --node-resolve --config web-test-runner.config.mjs"
     },
     "dependencies": {
@@ -40,6 +41,7 @@
         "css-tree": "^3.2.1",
         "eslint-scope": "^8.4.0",
         "globals": "^17.13.0",
+        "jsonwebtoken": "^9.0.3",
         "lit": "3.3.3"
     },
     "devDependencies": {

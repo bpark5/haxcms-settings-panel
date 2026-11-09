@@ -1,6 +1,7 @@
 import { haxUiStyles } from "./lib/hax-ui-styles.js";
 import { LitElement, html } from "lit";
 import { authenticationStyles } from "./lib/authentication-styles.js";
+import { MockAuthorizationClient } from "./lib/mock-authorization-client.js";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
 import "@haxtheweb/rpg-character/rpg-character.js";
@@ -22,6 +23,8 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.authenticating = false;
     this.required = false;
     this.authController = null;
+    this.authorization = new MockAuthorizationClient();
+    this.cooldownSeconds = 0;
   }
 
   static get properties() {
@@ -33,7 +36,9 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
       opened: { type: Boolean, reflect: true },
       errorMessage: { type: String },
       authenticating: { type: Boolean },
-      required: { type: Boolean }
+      required: { type: Boolean },
+      authorization: { attribute: false },
+      cooldownSeconds: { state: true }
     };
   }
 
@@ -66,6 +71,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
                 ? "Enter your HAX account password to continue to site settings."
                 : "Enter your HAX account password to save your code."}
             </p>
+            ${this.errorMessage ? html`<p id="authentication-error" class="error-message" role="alert">${this.errorMessage}</p>` : ""}
             <div class="password-input">
               <input id="password" type=${this.showPassword ? "text" : "password"}
                 .value=${this.password} @input=${this.passwordChanged} @keydown=${this.handleKeydown}
@@ -78,11 +84,10 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
                 <simple-icon-lite src=${this._getIconPath(this.showPassword ? "visibility" : "visibility-off")} aria-hidden="true"></simple-icon-lite>
               </button>
             </div>
-            ${this.errorMessage ? html`<p id="authentication-error" class="error-message" role="alert">${this.errorMessage}</p>` : ""}
             <button class="continue-button" type="button" @click=${this.continueAuthentication}
-              ?disabled=${!this.password || this.authenticating}>
+              ?disabled=${!this.password || this.authenticating || this.cooldownSeconds > 0}>
               <simple-icon-lite src=${this._getIconPath("login")} aria-hidden="true"></simple-icon-lite>
-              ${this.authenticating ? "Authenticating..." : "Login"}
+              ${this.cooldownSeconds > 0 ? `Try again in ${this.cooldownSeconds}s` : this.authenticating ? "Authenticating..." : "Login"}
             </button>
           </div>
         </div>
@@ -114,6 +119,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     this.authenticating = false;
     this.required = required;
     this.opened = true;
+    this._refreshCooldown();
 
     this.updateComplete.then(() => {
       if (this.shadowRoot) {
@@ -261,7 +267,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   continueAuthentication() {
-    if (!this.password || this.authenticating) {
+    if (!this.password || this.authenticating || this.cooldownSeconds > 0) {
       return;
     }
 
@@ -279,26 +285,13 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     const controller = new AbortController();
     this.authController = controller;
 
-    fetch("/api/mock-authentication", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ password }),
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok && response.status !== 401) {
-          throw new Error("Authentication server error. Please try again later.")
-        }
-        return response.json();
-      })
+    this.authorization.authenticate(password, controller.signal)
       .then((data) => {
-        if (controller.signal.aborted || !this.opened) {
+        if (controller.signal.aborted || !this.opened || !data) {
           return;
         }
 
-        if (data.success) {
+        if (data.success && this.authorization.hasAuthorization()) {
           this.authenticationSucceeded();
         } else {
           this.authenticationFailed(
@@ -310,10 +303,10 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
         if (controller.signal.aborted || !this.opened) {
           return;
         }
-        console.error("Error during authentication:", error);
         this.authenticationFailed(
-          "Unable to complete authentication. Please try again later."
+          error.message || "Unable to complete authentication. Please try again later."
         );
+        this._refreshCooldown();
       })
       .finally(() => {
         if (this.authController === controller) {
@@ -339,6 +332,22 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
       
 
+
+  disconnectedCallback() {
+    clearTimeout(this._cooldownTimer);
+    if (this.authController) this.authController.abort();
+    super.disconnectedCallback();
+  }
+
+  _refreshCooldown() {
+    clearTimeout(this._cooldownTimer);
+    const previous = this.cooldownSeconds;
+    this.cooldownSeconds = Math.max(0, Math.ceil(((this.authorization.retryUntil || 0) - this.authorization.now()) / 1000));
+    if (previous && !this.cooldownSeconds) this.errorMessage = "";
+    if (this.opened && this.cooldownSeconds > 0) {
+      this._cooldownTimer = setTimeout(() => this._refreshCooldown(), 1000);
+    }
+  }
 
   authenticationFailed(
     message = "Authentication failed. Please check your password and try again.",
