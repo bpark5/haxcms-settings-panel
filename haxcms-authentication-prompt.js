@@ -1,3 +1,4 @@
+import { haxUiStyles } from "./lib/hax-ui-styles.js";
 import { LitElement, html } from "lit";
 import { authenticationStyles } from "./lib/authentication-styles.js";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
@@ -14,7 +15,6 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     super();
 
     this.username = "";
-    this._usernameDraft = "";
     this.password = "";
     this.showPassword = false;
     this.opened = false;
@@ -28,7 +28,6 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     return {
       ...super.properties,
       username: { type: String },
-      _usernameDraft: { state: true },
       password: { type: String },
       showPassword: { type: Boolean },
       opened: { type: Boolean, reflect: true },
@@ -39,7 +38,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
   }
 
   static get styles() {
-    return [super.styles, authenticationStyles];
+    return [super.styles, haxUiStyles, authenticationStyles];
   }
 
   render() {
@@ -62,10 +61,10 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
           </div>
           <div class="prompt-content">
             <rpg-character seed=${this.username || "hax"} height="95" width="75" aria-hidden="true"></rpg-character>
-            ${this.username ? html`
             <p id="authentication-description" class="welcome">
-              Welcome back, ${this.username}!
-              <button class="switch-account" type="button" @click=${this._changeAccount}>Not you?</button>
+              ${this.username ? `Welcome back, ${this.username}!` : this.required
+                ? "Enter your HAX account password to continue to site settings."
+                : "Enter your HAX account password to save your code."}
             </p>
             <div class="password-input">
               <input id="password" type=${this.showPassword ? "text" : "password"}
@@ -85,18 +84,6 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
               <simple-icon-lite src=${this._getIconPath("login")} aria-hidden="true"></simple-icon-lite>
               ${this.authenticating ? "Authenticating..." : "Login"}
             </button>
-            ` : html`
-              <p id="authentication-description" class="welcome">Enter your username to continue.</p>
-              <input id="username" aria-label="Username" autocomplete="username" placeholder="Enter your username"
-                .value=${this._usernameDraft}
-                @input=${event => this._usernameDraft = event.target.value}
-                @keydown=${event => { if (event.key === "Enter") this._selectAccount(); }}>
-              <button class="continue-button" type="button" @click=${this._selectAccount}
-                ?disabled=${!this._usernameDraft.trim()}>Next</button>
-            `}
-            <p class="authentication-status" role="status" aria-live="polite">
-              ${this.authenticating ? "Authenticating..." : ""}
-            </p>
           </div>
         </div>
       </div>
@@ -116,33 +103,6 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
     return icons[icon] || "";
   }
 
-  _selectAccount() {
-    const username = this._usernameDraft.trim();
-    if (!username) return;
-    this.username = username;
-    this.password = "";
-    this.errorMessage = "";
-    this.dispatchEvent(new CustomEvent("username-change", {
-      detail: { username }, bubbles: true, composed: true,
-    }));
-    this.updateComplete.then(() => this.shadowRoot.querySelector("#password").focus());
-  }
-
-  _changeAccount() {
-    if (this.authController) this.authController.abort();
-    this.authController = null;
-    this.authenticating = false;
-    this.password = "";
-    this.showPassword = false;
-    this.errorMessage = "";
-    this.username = "";
-    this._usernameDraft = "";
-    this.dispatchEvent(new CustomEvent("username-change", {
-      detail: { username: "" }, bubbles: true, composed: true,
-    }));
-    this.updateComplete.then(() => this.shadowRoot.querySelector("#username").focus());
-  }
-
   open(required = false) {
     if (this.authController) {
       this.authController.abort();
@@ -157,7 +117,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
 
     this.updateComplete.then(() => {
       if (this.shadowRoot) {
-        const passwordField = this.shadowRoot.querySelector("#password, #username");
+        const passwordField = this.shadowRoot.querySelector("#password");
 
         if (passwordField) {
           passwordField.focus();

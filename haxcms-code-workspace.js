@@ -1,3 +1,4 @@
+import { haxUiStyles } from "./lib/hax-ui-styles.js";
 import { html, css } from "lit";
 import { keyed } from "lit/directives/keyed.js";
 import { DDD } from "@haxtheweb/d-d-d/d-d-d.js";
@@ -290,12 +291,12 @@ export class HaxcmsCodeWorkspace extends DDD {
   }
 
   static get styles() {
-    return [super.styles,
+    return [super.styles, haxUiStyles,
     css`
       :host {
         display: block;
-        font-family: var(--ddd-font-navigation);
-        color: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
+        font-family: var(--hax-ui-admin-font-family);
+        color: var(--hax-ui-text);
       }
 
       .workspace {
@@ -307,16 +308,16 @@ export class HaxcmsCodeWorkspace extends DDD {
 
       .editor-section, .preview-section, .preview-status {
         min-width: 0;
-        border: 1px solid light-dark(var(--ddd-theme-default-limestoneLight), var(--ddd-theme-default-slateGray));
+        border: 1px solid var(--hax-ui-line);
         border-radius: var(--ddd-radius-sm);
         overflow: hidden;
       }
 
       .heading {
         padding: var(--ddd-spacing-3) var(--ddd-spacing-4);
-        background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-black));
-        color: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
-        border-bottom: var(--ddd-border-sm);
+        background: var(--hax-ui-content-group);
+        color: var(--hax-ui-text);
+        border-bottom: 1px solid var(--hax-ui-line);
       }
 
       .editor-controls {
@@ -333,7 +334,7 @@ export class HaxcmsCodeWorkspace extends DDD {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         width: calc(2 * var(--ddd-spacing-24));
         max-width: 100%;
-        border: 1px solid var(--panel-muted);
+        border: 1px solid var(--hax-ui-line-strong);
         border-radius: var(--ddd-radius-xs);
         overflow: hidden;
       }
@@ -342,17 +343,18 @@ export class HaxcmsCodeWorkspace extends DDD {
         box-sizing: border-box;
         min-width: 0;
         font: inherit;
-        font-size: var(--ddd-font-size-5xs);
+        font-size: 13px;
+        font-weight: var(--ddd-font-weight-regular, 400);
         line-height: var(--ddd-lh-120);
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: var(--ddd-spacing-1);
-        min-height: var(--ddd-spacing-7);
-        padding: var(--ddd-spacing-1) var(--ddd-spacing-2);
+        height: calc(var(--hax-ui-row-height) - 2px);
+        padding: 0 10px;
         border: 0;
-        border-right: 1px solid var(--panel-muted);
+        border-right: 1px solid var(--hax-ui-line-strong);
         background: transparent;
         color: var(--panel-text);
       }
@@ -362,19 +364,17 @@ export class HaxcmsCodeWorkspace extends DDD {
       }
 
       .language-toggle button.active {
-        background: var(--panel-selected);
+        background: var(--hax-ui-accent-soft);
+        box-shadow: inset 0 -3px 0 var(--hax-ui-accent-strong);
         font-weight: var(--ddd-font-weight-bold);
       }
 
       .language-toggle button:not(.active):hover {
-        background: light-dark(
-          var(--ddd-theme-default-limestoneMaxLight),
-          color-mix(in srgb, var(--ddd-theme-default-white) 8%, transparent)
-        );
+        background: var(--hax-ui-hover);
       }
 
       .language-toggle button:focus-visible {
-        outline: 2px solid var(--ddd-theme-default-keystoneYellow);
+        outline: var(--hax-ui-focus-width) solid var(--hax-ui-focus);
         outline-offset: -3px;
       }
 
@@ -395,16 +395,17 @@ export class HaxcmsCodeWorkspace extends DDD {
       }
 
       .preview-section {
-        border-color: light-dark(var(--ddd-theme-default-slateGray), var(--ddd-theme-default-slateLight));
-        background: light-dark(var(--ddd-theme-default-slateMaxLight), var(--ddd-theme-default-slateGray));
+        border-color: var(--hax-ui-line);
+        background: var(--hax-ui-surface);
       }
 
       .preview-canvas {
         padding: var(--ddd-spacing-4);
+        background: light-dark(var(--ddd-theme-default-slateMaxLight), var(--ddd-theme-default-slateGray));
       }
 
       .preview-window {
-        border: 1px solid light-dark(var(--ddd-theme-default-limestoneLight), color-mix(in srgb, var(--ddd-theme-default-white) 18%, transparent));
+        border: 1px solid var(--hax-ui-line);
         border-radius: var(--ddd-radius-sm);
         overflow: hidden;
         box-shadow: var(--ddd-boxShadow-sm);
@@ -418,9 +419,9 @@ export class HaxcmsCodeWorkspace extends DDD {
         gap: var(--ddd-spacing-2);
         padding: var(--ddd-spacing-2) var(--ddd-spacing-3);
         background: light-dark(var(--ddd-theme-default-limestoneMaxLight), var(--ddd-theme-default-nittanyNavy));
-        color: light-dark(var(--ddd-theme-default-coalyGray), var(--ddd-theme-default-white));
+        color: var(--hax-ui-text);
         border-bottom: 1px solid light-dark(var(--ddd-theme-default-limestoneLight), color-mix(in srgb, var(--ddd-theme-default-white) 18%, transparent));
-        font-family: var(--ddd-font-navigation);
+        font-family: var(--hax-ui-admin-font-family);
         font-size: var(--ddd-font-size-5xs);
       }
 
@@ -441,7 +442,7 @@ export class HaxcmsCodeWorkspace extends DDD {
 
       .editor-title, .preview-title {
         margin: 0;
-        font-family: var(--ddd-font-navigation);
+        font-family: var(--hax-ui-admin-font-family);
         font-size: var(--ddd-font-size-4xs);
         font-weight: var(--ddd-font-weight-bold);
         line-height: var(--ddd-lh-150);
@@ -449,7 +450,7 @@ export class HaxcmsCodeWorkspace extends DDD {
 
       .editor-description, .preview-description {
         margin: var(--ddd-spacing-1) 0 0;
-        font-family: var(--ddd-font-navigation);
+        font-family: var(--hax-ui-admin-font-family);
         font-size: var(--ddd-font-size-5xs);
         line-height: var(--ddd-lh-150);
       }
