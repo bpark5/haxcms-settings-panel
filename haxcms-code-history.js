@@ -359,7 +359,7 @@ export class HaxcmsCodeHistory extends DDD {
                 aria-pressed=${this._selected && this._selected.id === revision.id ? "true" : "false"}
                 @click=${() => this._read(revision.id)}>
                 Version ${this._revisions.length - index} · ${new Date(revision.createdAt).toLocaleString()}
-                ${revision.kind === "preserved" ? " · Preserved file" : ""}
+                ${revision.kind === "preserved" ? " · Previous file contents" : ""}
                 ${revision.isCurrent ? " · Current saved version" : ""}
               </button></li>
             `)}
