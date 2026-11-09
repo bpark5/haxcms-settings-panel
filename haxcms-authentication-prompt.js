@@ -65,7 +65,7 @@ export class HaxcmsAuthenticationPrompt extends DDDSuper(LitElement) {
             </button>
           </div>
           <div class="prompt-content">
-            <rpg-character seed=${this.username || "hax"} height="95" width="75" aria-hidden="true"></rpg-character>
+            <rpg-character seed=${this.username || "admin"} height="95" width="75" aria-hidden="true"></rpg-character>
             <p id="authentication-description" class="welcome">
               ${this.username ? `Welcome back, ${this.username}!` : this.required
                 ? "Enter your HAX account password to continue to site settings."
