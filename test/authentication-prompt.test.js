@@ -112,11 +112,17 @@ describe("Authentication prompt", () => {
     const originalFetch = globalThis.fetch;
     const submitted = [];
     globalThis.fetch = async (url, options) => {
-      expect(url).to.equal('/api/mock-authentication');
+      if (url === '/mock-session') return new Response(JSON.stringify({ success: true, jwt: 'demo-jwt', userToken: 'demo-user-token' }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      expect(url).to.equal('/mock-authentication');
+      expect(options.headers.Authorization).to.equal('Bearer demo-jwt');
+      expect(options.headers['X-HAXCMS-User-Token']).to.equal('demo-user-token');
       const body = JSON.parse(options.body);
       submitted.push(body);
       const success = body.password === 'demo123';
-      return new Response(JSON.stringify({ success, message: 'Incorrect password. Please try again.' }), {
+      return new Response(JSON.stringify({ success, nonce: success ? 'opaque-nonce' : undefined,
+        expiresAt: Date.now() + 60_000, expiresInSeconds: 60, message: 'Incorrect password. Please try again.' }), {
         status: success ? 200 : 401,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -147,6 +153,52 @@ describe("Authentication prompt", () => {
       expect(submitted).to.deep.equal([{ password: 'wrong-password' }, { password: 'demo123' }]);
     } finally {
       globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("shows a server-directed cooldown and prevents Login until it expires", async () => {
+    const originalFetch = globalThis.fetch;
+    let time = Date.now();
+    let attempts = 0;
+    prompt.authorization.now = () => time;
+    globalThis.fetch = async url => {
+      if (url === '/mock-session') return new Response(JSON.stringify({ success: true, jwt: 'jwt', userToken: 'token' }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      attempts++;
+      return new Response(JSON.stringify({ success: false, code: 'AUTH_RATE_LIMITED', retryAfterSeconds: 60,
+        message: 'Too many incorrect passwords. Try again in 60 seconds. Your draft is preserved.' }), {
+        status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+      });
+    };
+    try {
+      prompt.password = 'wrong';
+      prompt.continueAuthentication();
+      await waitUntil(() => !prompt.authenticating && prompt.cooldownSeconds === 60);
+      expect(prompt.opened).to.equal(true);
+      expect(prompt.errorMessage).to.include('Too many incorrect passwords');
+      prompt.password = 'demo123';
+      await prompt.updateComplete;
+      const button = prompt.shadowRoot.querySelector('.continue-button');
+      expect(button.disabled).to.equal(true);
+      expect(button.textContent).to.include('Try again in 60s');
+      prompt.continueAuthentication();
+      expect(attempts).to.equal(1);
+      prompt.closePrompt();
+      prompt.open(false);
+      expect(prompt.cooldownSeconds).to.equal(60);
+      time += 59_999;
+      prompt._refreshCooldown();
+      expect(prompt.cooldownSeconds).to.equal(1);
+      time += 1;
+      prompt._refreshCooldown();
+      prompt.password = 'demo123';
+      await prompt.updateComplete;
+      expect(button.disabled).to.equal(false);
+      expect(button.textContent).to.include('Login');
+    } finally {
+      globalThis.fetch = originalFetch;
+      prompt.remove();
     }
   });
 });

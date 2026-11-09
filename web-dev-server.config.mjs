@@ -4,6 +4,7 @@ import { validationDevPlugin } from './lib/validation-dev-plugin.mjs';
 import { previewComponentsDevPlugin } from './lib/preview-components-bundle.mjs';
 import { validateJavaScriptSyntax } from './lib/validate-javascript-syntax.js';
 import { validateCSS } from './lib/validate-css.js';
+import { mockAuthorization } from './lib/mock-reauthentication.mjs';
 
 const customCodeFiles = {
   javascript: new URL('./mock-site/custom.js', import.meta.url),
@@ -13,7 +14,10 @@ const maxSaveBytes = 1024 * 1024;
 const codeStore = createMockCodeStore();
 
 // Local proof of concept: store text only; do not execute or build it.
-export function createMockSaveCode(saveCode = (language, code) => codeStore.save(language, code)) {
+export function createMockSaveCode(
+  saveCode = (language, code, beforeWrite) => codeStore.save(language, code, beforeWrite),
+  authorization = mockAuthorization,
+) {
   return async function mockSaveCode(context, next) {
     // Vercel handles /api itself; use a separate path for dev-server middleware.
     if (context.path !== '/mock-save-code') {
@@ -32,6 +36,14 @@ export function createMockSaveCode(saveCode = (language, code) => codeStore.save
     if (!context.is('application/json')) {
       context.status = 415;
       context.body = { success: false, message: 'Send an application/json body.' };
+      return;
+    }
+
+    try {
+      authorization.verify(context.headers);
+    } catch (error) {
+      context.status = error.status;
+      context.body = { success: false, code: error.code, message: error.message };
       return;
     }
 
@@ -95,12 +107,67 @@ export function createMockSaveCode(saveCode = (language, code) => codeStore.save
 
     try {
       // Validation precedes all writes. The destination is fixed on the server.
-      const revision = await saveCode(payload.language, payload.code);
+      const beforeWrite = () => authorization.verify(context.headers);
+      beforeWrite();
+      const revision = await saveCode(payload.language, payload.code, beforeWrite);
       context.status = 200;
       context.body = { success: true, revision, message: `${payload.language} customization saved.` };
-    } catch {
-      context.status = 500;
-      context.body = { success: false, message: 'Unable to save customization.' };
+    } catch (error) {
+      context.status = error.status || 500;
+      context.body = { success: false, code: error.status ? error.code : undefined,
+        message: error.status ? error.message : 'Unable to save customization.' };
+    }
+  };
+}
+
+/** These routes simulate an existing login; never mount them in real HAX. */
+export function createMockAuthentication(authorization = mockAuthorization) {
+  return async (context, next) => {
+    if (!['/mock-session', '/mock-authentication'].includes(context.path)) return next();
+    context.type = 'application/json';
+    context.set('Cache-Control', 'no-store');
+    const method = context.path === '/mock-session' ? 'GET' : 'POST';
+    if (context.method !== method) {
+      context.set('Allow', method);
+      context.status = 405;
+      context.body = { success: false, message: `Use ${method}.` };
+      return;
+    }
+    if (method === 'GET') {
+      context.status = 200;
+      context.body = authorization.session();
+      return;
+    }
+    if (!context.is('application/json')) {
+      context.status = 415;
+      context.body = { success: false, message: 'Send an application/json body.' };
+      return;
+    }
+    try {
+      authorization.identity(context.headers);
+      const chunks = [];
+      let bytes = 0;
+      for await (const chunk of context.req) {
+        const buffer = Buffer.from(chunk);
+        bytes += buffer.length;
+        if (bytes > 4096) {
+          context.status = 413;
+          context.body = { success: false, message: 'Authentication request is too large.' };
+          return;
+        }
+        chunks.push(buffer);
+      }
+      let payload;
+      try { payload = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+      catch { context.status = 400; context.body = { success: false, message: 'Invalid JSON request body.' }; return; }
+      context.body = authorization.issueForRequest(context.headers, payload);
+      context.status = 200;
+    } catch (error) {
+      context.status = error.status || 500;
+      if (error.retryAfterSeconds) context.set('Retry-After', String(error.retryAfterSeconds));
+      context.body = { success: false, code: error.status ? error.code : undefined,
+        retryAfterSeconds: error.retryAfterSeconds,
+        message: error.status ? error.message : 'Unable to authenticate.' };
     }
   };
 }
@@ -141,9 +208,17 @@ const hmr = process.argv.includes('--hmr');
 export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   open: false,
   watch: !hmr,
+  // Saving output must not reload the page: drafts and the nonce live in memory.
+  // Chokidar 4 accepts regular expressions rather than glob patterns here.
+  chokidarOptions: {
+    ignored: [
+      /[/\\]mock-site[/\\]custom\.(?:js|css)(?:\.[^/\\]+\.tmp)?$/,
+      /[/\\]mock-site[/\\]history(?:[/\\]|$)/,
+    ],
+  },
   https: true,
   dedupe: true,
-  middleware: [createMockSaveCode(), createMockCodeHistory()],
+  middleware: [createMockAuthentication(), createMockSaveCode(), createMockCodeHistory()],
   /** Resolve bare module imports */
   nodeResolve: {
     exportConditions: ['browser', 'development'],

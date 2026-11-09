@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createMockSaveCode } from "../web-dev-server.config.mjs";
+import { mockAuthorization } from "../lib/mock-reauthentication.mjs";
+
+const session = mockAuthorization.session();
+const identityHeaders = { authorization: `Bearer ${session.jwt}`, "x-haxcms-user-token": session.userToken };
+const authorizedHeaders = { ...identityHeaders, "x-haxcms-reauthentication": mockAuthorization.issue(identityHeaders, "demo123").nonce };
 
 function request(payload, overrides = {}) {
   return {
@@ -8,6 +13,7 @@ function request(payload, overrides = {}) {
     method: "POST",
     is: type => type === "application/json",
     set() {},
+    headers: { ...authorizedHeaders },
     req: [Buffer.from(JSON.stringify(payload))],
     ...overrides,
   };

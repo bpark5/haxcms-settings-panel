@@ -9,6 +9,7 @@ import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
 import "@haxtheweb/simple-icon/lib/simple-icon-lite.js";
 import "./haxcms-authentication-prompt.js";
 import "./haxcms-code-history.js";
+import { MockAuthorizationClient } from "./lib/mock-authorization-client.js";
 
 /**
  * `haxcms-settings-panel`
@@ -31,6 +32,10 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     this.panelVisible = true;
     this.selectedLanguage = "javascript";
     this.username = "";
+    this.authorization = new MockAuthorizationClient();
+    this._pendingSave = null;
+    this._reauthentication = null;
+    this.saving = false;
     this._validationState = {};
     this._menuCollapsed = false;
     this._historyOpen = false;
@@ -51,6 +56,8 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
       panelVisible: {type: Boolean, reflect: true},
       selectedLanguage: { type: String },
       username: { type: String },
+      authorization: { attribute: false },
+      saving: { type: Boolean },
       _validationState: { state: true },
       _previewSaveState: { state: true },
       _menuCollapsed: { state: true },
@@ -207,8 +214,6 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         display: grid;
         grid-template-columns: var(--hax-ui-rail-width) minmax(0, 1fr);
         min-height: 0;
-        container-type: inline-size;
-        container-name: settings-panel;
         transition: grid-template-columns var(--ddd-duration-fast, 150ms) var(--ddd-timing-ease, ease);
       }
 
@@ -580,7 +585,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         }
       }
 
-      @container settings-panel (max-width: 760px) {
+      @media (max-width: 760px) {
         .panel-header {
           padding: var(--hax-ui-gap-md) var(--hax-ui-gap-lg);
         }
@@ -625,8 +630,8 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     const changedLanguages = workspace
       ? ["javascript", "css"].filter(language => workspace.hasUnsavedChanges(language)) : [];
     const validation = this._validationState[this.selectedLanguage];
-    const saveDisabled = !!workspace && (!dirty || !validation || validation.pending || !validation.valid ||
-      !this._previewSaveState || !this._previewSaveState.canSave);
+    const saveDisabled = this.saving || (!!workspace && (!dirty || !validation || validation.pending || !validation.valid ||
+      !this._previewSaveState || !this._previewSaveState.canSave));
     const languageLabel = this.selectedLanguage === "css" ? "CSS" : "JavaScript";
     const saveHint = !dirty && workspace ? `No unsaved ${languageLabel} changes.`
       : saveDisabled ? ((validation && validation.message) || "Waiting for preview.")
@@ -733,6 +738,7 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
         </dialog>
         <haxcms-authentication-prompt
           .username=${this.username}
+          .authorization=${this.authorization}
           @username-change=${event => this.username = event.detail.username}
           @authentication-success=${this.handleAuthenticationSuccess}
           @authentication-cancel=${this.handleAuthenticationCancel}></haxcms-authentication-prompt>
@@ -817,7 +823,16 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   _openAuthenticationPrompt(required = false) {
+    if (!required && this.saving) return;
     if (!required && !this._validateCodeForSave()) return;
+    if (!required) {
+      const editor = this.querySelector(`code-editor[language="${this.selectedLanguage}"]`);
+      this._pendingSave = { language: this.selectedLanguage, code: editor ? editor.value ?? "" : "" };
+      if (this.authorization.hasAuthorization()) {
+        this._dispatchSave();
+        return;
+      }
+    }
     const prompt = this.shadowRoot.querySelector(
       "haxcms-authentication-prompt"
     );
@@ -831,15 +846,50 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
     const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
     await prompt.updateComplete;
 
-    if (!event.detail.required && this._validateCodeForSave()) {
-      this.dispatchEvent (
-        new CustomEvent("save-request", {
-          detail: {language: this.selectedLanguage},
-          bubbles: true,
-          composed: true,
-          })
-      );
+    if (!this.authorization.hasAuthorization()) return;
+    if (this._reauthentication) {
+      const resolve = this._reauthentication;
+      this._reauthentication = null;
+      resolve(this._validatePendingSave());
+      this._pendingSave = null;
+    } else if (!event.detail.required && this._validatePendingSave()) {
+      this._dispatchSave();
     }
+  }
+
+  _validatePendingSave() {
+    const workspace = this.querySelector("haxcms-code-workspace");
+    if (!workspace) return true;
+    return !!this._pendingSave && workspace.validateDraft(this._pendingSave.language) && workspace.canSavePreview;
+  }
+
+  _dispatchSave() {
+    if (!this._pendingSave || !this.authorization.hasAuthorization()) return;
+    const snapshot = this._pendingSave;
+    this._pendingSave = null;
+    this.dispatchEvent(new CustomEvent("save-request", {
+      detail: snapshot, bubbles: true, composed: true,
+    }));
+  }
+
+  /** Called only after the backend explicitly rejected a save's authorization. */
+  requestReauthentication(snapshot) {
+    this.authorization.clearNonce();
+    if (this._reauthentication) return Promise.resolve(false);
+    this._pendingSave = snapshot;
+    const result = new Promise(resolve => { this._reauthentication = resolve; });
+    this.shadowRoot.querySelector("haxcms-authentication-prompt").open(false);
+    return result;
+  }
+
+  disconnectedCallback() {
+    const prompt = this.shadowRoot && this.shadowRoot.querySelector("haxcms-authentication-prompt");
+    if (prompt && prompt.authController) prompt.authController.abort();
+    this.authorization.dispose();
+    if (this._reauthentication) this._reauthentication(false);
+    this._reauthentication = null;
+    this._pendingSave = null;
+    super.disconnectedCallback();
   }
 
   _handleCodeValidation(event) {
@@ -861,6 +911,9 @@ export class HaxcmsSettingsPanel extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   async handleAuthenticationCancel() {
+    this._pendingSave = null;
+    if (this._reauthentication) this._reauthentication(false);
+    this._reauthentication = null;
     const prompt = this.shadowRoot.querySelector("haxcms-authentication-prompt");
 
     await prompt.updateComplete;

@@ -43,6 +43,7 @@
     import "./haxcms-settings-panel.js";
     import "./haxcms-code-workspace.js";
     import "@haxtheweb/code-editor/code-editor.js";
+    import { saveMockCode } from "./lib/mock-authorization-client.js";
 
     const panel = document.querySelector("#settings-panel");
     // Keep both editors mounted so each language retains its own draft.
@@ -71,29 +72,16 @@
       if (!Object.hasOwn(editors, language)) return;
 
       saving = true;
-      const code = editors[language].value ?? "";
+      panel.saving = true;
+      const code = event.detail.code;
       try {
-        const response = await fetch("/mock-save-code", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            language,
-            code,
-          }),
+        const result = await saveMockCode({
+          authorization: panel.authorization,
+          language,
+          code,
+          reauthenticate: () => panel.requestReauthentication({ language, code }),
         });
-
-        if (!(response.headers.get("content-type") || "").includes("application/json")) {
-          throw new Error(
-            `Save endpoint returned HTTP ${response.status} instead of JSON. Restart vercel dev and reload this page.`,
-          );
-        }
-
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Unable to save.");
-        }
+        if (!result) return;
 
         document.querySelector("haxcms-code-workspace").markSaved(language, code);
         alert(`${language === "css" ? "CSS" : "JavaScript"} saved.`);
@@ -101,6 +89,7 @@
         alert(`Save failed: ${error.message}`);
       } finally {
         saving = false;
+        panel.saving = false;
       }
     });
 

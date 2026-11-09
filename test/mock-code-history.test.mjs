@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { mockAuthorization } from "../lib/mock-reauthentication.mjs";
 import assert from "node:assert/strict";
 import * as fs from "node:fs/promises";
 import os from "node:os";
@@ -79,6 +80,11 @@ test("invalid requests do not create history; corrupt history is not overwritten
   const { root, store } = await setup(t);
   const save = createMockSaveCode((language, code) => store.save(language, code));
   const context = {
+    headers: (() => {
+      const session = mockAuthorization.session();
+      const headers = { authorization: `Bearer ${session.jwt}`, "x-haxcms-user-token": session.userToken };
+      return { ...headers, "x-haxcms-reauthentication": mockAuthorization.issue(headers, "demo123").nonce };
+    })(),
     path: "/mock-save-code", method: "POST", set() {}, is: () => true,
     req: [Buffer.from(JSON.stringify({ language: "javascript", code: "const broken = ;" }))],
   };
