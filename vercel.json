@@ -1,3 +1,19 @@
 {
-  "devCommand": "npm start -- --port $PORT"
+  "devCommand": "npm start -- --port $PORT",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/*.js": {
+      "includeFiles": "mock-site/custom.{js,css}",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/mock-session", "destination": "/api/mock?route=session" },
+    { "source": "/mock-authentication", "destination": "/api/mock?route=authentication" },
+    { "source": "/mock-save-code", "destination": "/api/mock?route=save-code" },
+    { "source": "/mock-code-history", "destination": "/api/mock?route=code-history" },
+    { "source": "/mock-code-history/:id", "destination": "/api/mock?route=code-history/:id" },
+    { "source": "/mock-code-source", "destination": "/api/mock?route=code-source" }
+  ]
 }

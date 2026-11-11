@@ -261,7 +261,9 @@ export class HaxcmsCodeWorkspace extends DDD {
 
     try {
       const fixtureUrl = new URL("./mock-site/preview.html", globalThis.document.baseURI);
-      const urls = [fixtureUrl, ...["preview.css", "custom.js", "custom.css", "preview-components.js"].map(name => new URL(name, fixtureUrl))];
+      const urls = [fixtureUrl, new URL("preview.css", fixtureUrl),
+        new URL("/mock-code-source?language=javascript", fixtureUrl),
+        new URL("/mock-code-source?language=css", fixtureUrl), new URL("preview-components.js", fixtureUrl)];
       const [markup, stylesheet, javascript, css, components] = await Promise.all(urls.map(async (url) => {
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
         if (!response.ok) throw new Error(`Preview asset returned HTTP ${response.status}.`);

@@ -32,7 +32,7 @@ describe("Customization history", () => {
           : { success: true, revisions: entries.map(({ code, ...metadata }) => metadata) };
         return new Response(JSON.stringify(payload), { headers: { "Content-Type": "application/json" } });
       }
-      if (["/mock-site/custom.js", "/mock-site/custom.css"].includes(url.pathname)) return new Response("");
+      if ((url.pathname === "/mock-code-source" || ["/mock-site/custom.js", "/mock-site/custom.css"].includes(url.pathname))) return new Response("");
       return originalFetch(input, options);
     };
   });

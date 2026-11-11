@@ -25,7 +25,7 @@ describe("Local save authorization flow", () => {
     rejectNextSave = false;
     globalThis.fetch = async (input, options) => {
       const url = new URL(input instanceof Request ? input.url : input, document.baseURI);
-      if (["/mock-site/custom.js", "/mock-site/custom.css"].includes(url.pathname)) return new Response("");
+      if ((url.pathname === "/mock-code-source" || ["/mock-site/custom.js", "/mock-site/custom.css"].includes(url.pathname))) return new Response("");
       return originalFetch(input, options);
     };
     authorization = new MockAuthorizationClient({ now: () => time, fetchImpl: async (url, options) => {
