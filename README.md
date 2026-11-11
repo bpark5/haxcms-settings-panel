@@ -117,10 +117,10 @@ scenario. History has no retention limit yet. The journals are ignored by Git
 and are not copied into production builds. Existing history before this feature
 cannot be reconstructed from the active files.
 
-Restart the local server after configuration changes. Use `vercel dev` for the
-existing mock password flow (`demo123`). History and saving are local development
-middleware, not real authentication/authorization or production persistence.
-Static hosting can show the preview but does not provide these endpoints.
+Restart the local server after configuration changes. `npm start` supplies the
+local mock password flow (`demo123`) and file storage. Hosted Vercel deployments
+use the function and shared-storage setup below. This is still a demo account,
+not real HAX authentication. Static hosting alone does not supply the API.
 
 History checks:
 
@@ -240,9 +240,9 @@ No secret setup is required for a single local server: signing and nonce secrets
 are random per process, so restarting invalidates existing credentials. Optional
 server launch variables `HAX_MOCK_JWT_SECRET` and `HAX_MOCK_REAUTH_SECRET` can supply
 independent high-entropy secrets (at least 32 random bytes each). Do not put secrets
-in browser source. The legacy `/api/mock-authentication` adapter uses the same
-service; separate processes must have matching environment keys. The demo page
-uses `/mock-authentication` in the same process as saves to avoid that split.
+in browser source. Local requests run in one dev-server process. Vercel requests,
+including the older `/api/mock-authentication` URL, use shared Redis state and
+require stable environment keys as described below.
 
 This implementation does not call real HAX APIs or modify the real OpenAPI spec.
 Future integration replaces the simulated session and identity/password checks
@@ -272,6 +272,53 @@ These tests are also included in `npm test`.
 
 Fuzzing attempts cannot be prevented, and passing a finite corpus does not prove
 all possible inputs safe. The tests exercise rejection and persistence guarantees;
-they are not a production load/DoS audit. Limits are in memory per local server
-process and reset on restart. Real integration should use HAX's shared rate-limit
-infrastructure; this mock does not supply distributed enforcement.
+they are not a production load/DoS audit. Local limits are in memory and reset on
+server restart. The Vercel adapter persists counters in Redis across instances.
+Real HAX integration should use HAX's shared rate-limit infrastructure.
+
+## Hosted demo on Vercel
+
+`vercel.json` builds `public/` and rewrites `/mock-session`, `/mock-authentication`,
+`/mock-save-code`, `/mock-code-history` (including revision details), and
+`/mock-code-source` to `api/mock.js`. That function adapts the same validation and
+authorization middleware used locally; it does not run the development server.
+The old `/api/mock-authentication` URL remains an alias to the hosted service.
+
+Deployment setup:
+
+1. Connect **Upstash for Redis** from the project's Vercel Storage/Marketplace
+   tab. A free plan is sufficient for this prototype. Disable automatic plan
+   upgrades and data eviction. Connect production and preview as needed.
+2. Set two independent server-side variables: `HAX_MOCK_JWT_SECRET` and
+   `HAX_MOCK_REAUTH_SECRET`. Each should be at least 32 cryptographically random
+   bytes, encoded as base64 or hex. Never commit them or put them in frontend code.
+3. The adapter accepts the integration's `KV_REST_API_URL`/`KV_REST_API_TOKEN`
+   or `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` variables. Use the full
+   read/write token, not a read-only token. See `.env.example` for variable names.
+4. Redeploy after configuring these variables. `vercel build --prod --yes`
+   checks the deployment bundle locally; it does not publish it.
+
+Redis stores the active source and complete revision history as one document per
+language. Atomic compare-and-set updates prevent lost saves across function
+instances. Nonce/session expiry is checked again using Redis's clock in the same
+operation that commits code and history. A rejected save cannot create even the
+initial preserved revision. The first save preserves the bundled seed code; later
+deployments do not overwrite shared customizations. Documents are capped at 4 MiB;
+exceeding the limit rejects the save and retains existing history rather than
+silently pruning it. Counters expire after 15 minutes of inactivity.
+
+`GET /mock-code-source?language=javascript` (or `css`) loads the shared saved source
+as plain text with `no-store`; the preview uses this rather than stale bundled
+files. The local endpoint reads the original file store. The browser runs drafts
+only in its existing sandbox; API functions never execute submitted code.
+
+Production and preview use separate storage namespaces by default. Set a stable
+`HAX_MOCK_STORAGE_PREFIX` if multiple projects share a database or separate preview
+branches need independent demos. All visitors to one namespace share the demo
+account, customizations, history, and cooldown; use sample code only.
+
+Missing configuration or storage failure returns a JSON error and prevents saves.
+There is no temporary-filesystem or per-instance memory fallback on Vercel. No
+real HAX API, Git-backed history, or OpenAPI specification is changed by this
+adapter. Before real HAX integration, replace the mock session/account checks and
+storage with the actual HAX equivalents.

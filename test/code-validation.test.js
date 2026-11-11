@@ -12,7 +12,7 @@ describe("Draft preview and Save validation", () => {
     globalThis.fetch = (input, options) => {
       const url = new URL(input instanceof Request ? input.url : input, document.baseURI);
       // Do not execute or change customizations saved during manual testing.
-      if (["/mock-site/custom.js", "/mock-site/custom.css"].includes(url.pathname)) {
+      if ((url.pathname === "/mock-code-source" || ["/mock-site/custom.js", "/mock-site/custom.css"].includes(url.pathname))) {
         return Promise.resolve(new Response("", { status: 200 }));
       }
       if (url.pathname === "/mock-save-code") {
